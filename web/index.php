@@ -61,6 +61,8 @@ foreach ($csv as $game) {
 	$count ++;
 }
 foreach($teams as $team) {
-		print_r($team);
+	print_r($team);
 }
+
+$gittest = "Hi Gari!"
 ?>
