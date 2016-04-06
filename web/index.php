@@ -1,4 +1,7 @@
 <?php
+
+//add class for MySQL
+
 function connectMySQLDB () {
 	$mySQLcon = new PDO('mysql:host=125.236.205.176;dbname=bethub', 'scott', 'SC0TTbethub');
 
