@@ -5,7 +5,7 @@
 function connectMySQLDB () {
 	$mySQLcon = new PDO('mysql:host=125.236.205.176;dbname=bethub', 'scott', 'SC0TTbethub');
 
-	return $mySQLcon
+	return $mySQLcon;
 }
 
 function checkTableExists($dbcon, $teamname) {
@@ -13,10 +13,10 @@ function checkTableExists($dbcon, $teamname) {
 	// untested
 	$sqlQ = 'SELECT ID FROM team WHERE Name="'.$teamname.'"';
 
-	$dbcon->prepare($sqlQ);
-	$dbcon->execute();
+	$sqlResponse = $dbcon->prepare($sqlQ);
+	$sqlResponse->execute();
 
-	$results = $dbcon->fetchAll();
+	$results = $sqlResponse->fetchAll();
 
 	if (count($results) == 1) {
 		return True;
@@ -46,10 +46,10 @@ function createTable($dbcon, $teamname, $country) {
 		FOREIGN KEY (`LeagueID`) REFERENCES `league` (`ID`),
 		FOREIGN KEY (`TeamID`) REFERENCES `team` (`ID`)
 	)
-	COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+	COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-	$dbcon->prepare($sqlQ);
-	$dbcon->execute();
+	$sqlResponse = $dbcon->prepare($sqlQ);
+	$sqlResponse->execute();
 }
 
 $file = fopen("./england_premier-league_2012-2013.csv","r");
@@ -79,12 +79,13 @@ foreach ($csv as $game) {
 		// insert game for home team
 	}
 
-	if (checkTableExists($mySQLcon, $game['hteam'])) {
-		//insert game for away team
-	} else {
-		createTable($mySQLcon, $game['hteam'],'eng');
-		// insert game for away team
-	}
+	// if (checkTableExists($mySQLcon, $game['hteam'])) {
+	// 	//insert game for away team
+	// } else {
+	// 	createTable($mySQLcon, $game['hteam'],'eng');
+	// 	// insert game for away team
+	// }
+	break;
 }
 
 ?>
