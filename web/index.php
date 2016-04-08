@@ -3,15 +3,18 @@
 //add class for MySQL
 
 function connectMySQLDB () {
-	$mySQLcon = new PDO('mysql:host=125.236.205.176;dbname=bethub', 'scott', 'SC0TTbethub');
+	// $mySQLcon = new PDO('mysql:host=125.236.205.176;dbname=bethub', 'scott', 'SC0TTbethub');
+	$mySQLcon = new PDO('mysql:host=192.168.0.102;dbname=bethub', 'scott', 'SC0TTbethub');
+
 
 	return $mySQLcon;
 }
 
-function checkTableExists($dbcon, $teamname) {
-	// check if table exists in MYSQL, return true if it does, return false if it doesn't
-	// untested
-	$sqlQ = 'SELECT ID FROM team WHERE Name="'.$teamname.'"';
+function checkTableExists($dbcon, $teamname, $country) {
+	// check if table exists in MYSQL, return true if it does, return false if it doesn't, if we want to make this more efficient in future, we only check
+	// this until we have created a table the same amount of times as there are teams in the league
+
+	$sqlQ = 'SELECT team_id FROM team_index WHERE team_name="'.$teamname.'"';
 
 	$sqlResponse = $dbcon->prepare($sqlQ);
 	$sqlResponse->execute();
@@ -19,38 +22,57 @@ function checkTableExists($dbcon, $teamname) {
 	$results = $sqlResponse->fetchAll();
 
 	if (count($results) == 1) {
-		return True;
+		return $results[0]['team_id'];
 	} else {
-		return False;
+		return false;
 	}
 }
 
-function createTable($dbcon, $teamname, $country) {
+function createTable($dbcon, $teamname, $country, $league_id) {
+
+	// insert team into team_index table
+
+	$sqlQteam = 'INSERT INTO team_index
+	(team_name, league_id) VALUES
+	("'.$teamname.'","'.$league_id.'")';
+
+	$sqlResponse = $dbcon->prepare($sqlQteam);
+	$sqlResponse->execute();
+
+	$teamID = $sqlResponse->fetch()['LAST_INSERT_ID()'];
+
 	// create a new table in MYSQL, if one for the team does not yet exist
-	// untested
-	$tablename = $teamname.'_'.$country;
+
+	$tablename = strtolower($teamname).'_'.strtolower($country);
 
 	$sqlQ = 'CREATE TABLE `bethub`.`games_'.$tablename.'` (
-		`ID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-		`GameNumber` INT(11) NOT NULL,
-		`Points` TINYINT(4) NOT NULL,
-		`GoalFor` TINYINT(4) NOT NULL,
-		`GoalAgainst` TINYINT(4) NOT NULL,
-		`GoalDiff` SMALLINT(6) NOT NULL,
-		`LeagueID` INT(10) UNSIGNED NOT NULL,
-		`TeamID` INT(10) NOT NULL,
-		PRIMARY KEY (`ID`),
-		UNIQUE INDEX `GameNumber` (`GameNumber`),
-		INDEX `LeagueID_chelsea` (`LeagueID`),
-		INDEX `TeamID_chelsea` (`TeamID`),
-		FOREIGN KEY (`LeagueID`) REFERENCES `league` (`ID`),
-		FOREIGN KEY (`TeamID`) REFERENCES `team` (`ID`)
-	)
-	COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+	`game_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`game_date` DATE NOT NULL,
+	`game_points` TINYINT(4) NOT NULL,
+	`game_gf` TINYINT(4) NOT NULL,
+	`game_ga` TINYINT(4) NOT NULL,
+	`game_gd` SMALLINT(6) NOT NULL,
+	`season_id` INT(10) UNSIGNED NOT NULL,
+	`team_id` INT(10) UNSIGNED NOT NULL,
+	PRIMARY KEY (`game_id`),
+	INDEX `season_id_games` (`season_id`),
+	INDEX `team_id_games` (`team_id`),
+	FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`),
+	FOREIGN KEY (`team_id`) REFERENCES `team_index` (`team_id`))
+ 	COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-	$sqlResponse = $dbcon->prepare($sqlQ);
-	$sqlResponse->execute();
+	$sqlStmt = $dbcon->prepare($sqlQ);
+	$sqlStmt->execute();
+
+	$tableData = [
+		'teamID' => $teamID,
+		'tablename' => $tablename
+	];
+
+	return $tableData;
 }
+
+// start index code here
 
 $file = fopen("./england_premier-league_2012-2013.csv","r");
 
@@ -61,31 +83,70 @@ while(! feof($file)) {
 		 'ateam' => $temp[1],
 		 'goals_ht' => $temp[2],
 		 'goals_at' => $temp[3],
-		 'game_date' => new DateTime($temp[4])
+		 'game_date' => date_format(new DateTime($temp[4]), "Y-m-d")
 	];
 }
 
 fclose($file);
 
-// start index code here
-
 $mySQLcon = connectMySQLDB();
 
 foreach ($csv as $game) {
-	if (checkTableExists($mySQLcon, $game['hteam'])) {
-		//insert game for home team
+
+	// set points for each team
+	if ($game['goals_ht'] > $game['goals_at']) {
+		$homepoints = 3;
+		$awaypoints = 0;
+	} elseif ($game['goals_at'] > $game['goals_ht']) {
+		$homepoints = 0;
+		$awaypoints = 3;
 	} else {
-		createTable($mySQLcon, $game['hteam'],'eng');
-		// insert game for home team
+		$homepoints = 1;
+		$awaypoints = 1;
+	}
+	$league_id = '1';
+	
+
+	if ($teamID = checkTableExists($mySQLcon, $game['hteam'], 'eng')) {
+		//insert game for home team
+		$tablename = strtolower($game['hteam']).'_eng';
+		$sqlQ = 'INSERT INTO `games_'.$tablename.'`
+		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id) VALUES
+		("'.$game['game_date'].'","'.$homepoints.'","'.$game['goals_ht'].'","'.$game['goals_at'].'","'.($game['goals_ht']-$game['goals_at']).'","'.$league_id.'","'.$teamID.'")';
+
+		$sqlResponse = $mySQLcon->prepare($sqlQ);
+		$sqlResponse->execute();
+	} else {
+		$sqlReturnsHome = createTable($mySQLcon, $game['hteam'],'eng', $league_id);
+
+		$sqlQ = 'INSERT INTO `games_'.$sqlReturnsHome['tablename'].'`
+		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id) VALUES
+		("'.$game['game_date'].'","'.$homepoints.'","'.$game['goals_ht'].'","'.$game['goals_at'].'","'.($game['goals_ht']-$game['goals_at']).'","'.$league_id.'","'.$sqlReturnsHome['teamID'].'")';
+
+		$sqlResponse = $mySQLcon->prepare($sqlQ);
+		$sqlResponse->execute();
 	}
 
-	// if (checkTableExists($mySQLcon, $game['hteam'])) {
-	// 	//insert game for away team
-	// } else {
-	// 	createTable($mySQLcon, $game['hteam'],'eng');
-	// 	// insert game for away team
-	// }
-	break;
+	if ($teamID = checkTableExists($mySQLcon, $game['ateam'], 'eng')) {
+		//insert game for away team
+		$tablename = strtolower($game['ateam']).'_eng';
+		$sqlQ = 'INSERT INTO `games_'.$tablename.'`
+		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id) VALUES
+		("'.$game['game_date'].'","'.$awaypoints.'","'.$game['goals_at'].'","'.$game['goals_ht'].'","'.($game['goals_at']-$game['goals_ht']).'","'.$league_id.'","'.$teamID.'")';
+
+		$sqlResponse = $mySQLcon->prepare($sqlQ);
+		$sqlResponse->execute();
+	} else {
+		// insert game for away team
+		$sqlReturnsAway = createTable($mySQLcon, $game['ateam'],'eng', $league_id);
+		
+		$sqlQ = 'INSERT INTO `games_'.$sqlReturnsAway['tablename'].'`
+		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id) VALUES
+		("'.$game['game_date'].'","'.$awaypoints.'","'.$game['goals_at'].'","'.$game['goals_ht'].'","'.($game['goals_at']-$game['goals_ht']).'","'.$league_id.'","'.$sqlReturnsAway['teamID'].'")';
+
+		$sqlResponse = $mySQLcon->prepare($sqlQ);
+		$sqlResponse->execute();
+	}
 }
 
 ?>
