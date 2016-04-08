@@ -2,10 +2,13 @@
 
 //add class for MySQL
 
+//add class for MySQL
 function connectMySQLDB () {
-	// $mySQLcon = new PDO('mysql:host=125.236.205.176;dbname=bethub', 'scott', 'SC0TTbethub');
-	$mySQLcon = new PDO('mysql:host=192.168.0.102;dbname=bethub', 'scott', 'SC0TTbethub');
+	include('config.php');
+	$db = $user['database'];
+	$dbhost  = 'mysql:host=' . $db['ip'] . ';dbname=' . $db['dbname'];
 
+	$mySQLcon = new PDO($dbhost, $db['username'], $db['password']);
 
 	return $mySQLcon;
 }
@@ -89,9 +92,15 @@ while(! feof($file)) {
 
 fclose($file);
 
+include_once('crawler.php');
+
+$games = crawlUrl('http://www.betexplorer.com/soccer/england/premier-league-2013-2014/results/');
+echo count($games) . ' games' . PHP_EOL;
+var_dump($games[count($games)-1]);
+
 $mySQLcon = connectMySQLDB();
 
-foreach ($csv as $game) {
+foreach ($games as $game) {
 
 	// set points for each team
 	if ($game['goals_ht'] > $game['goals_at']) {

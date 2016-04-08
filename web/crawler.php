@@ -17,7 +17,7 @@
 		//
 		$xpath = new DOMXPath($dom);
 		//	get tr's in results table
-		$rows = $xpath->query("//tbody[@id='leagueresults_tbody']/tr");
+		$rows = $xpath->query("//tbody[@id='leagueresults_tbody']/tr[not(contains(@class, 'rtitle'))]");
 
 		$games = array();
 
@@ -25,7 +25,6 @@
 			//	iterate through tr's
 			foreach ($rows as $row) {
 				//	team names
-				//	$teams = $xpath->query("td[1]/a", $row)->nodeValue;
 				$teams = $xpath->query("td[1]/a", $row)->item(0)->nodeValue;
 				list($team_1, $team_2) = explode(" - ", $teams);
 				//	score
@@ -33,6 +32,8 @@
 				list($goals_1, $goals_2) = explode(":", $score);
 				//	date
 				$date  = $xpath->query("td[6]", $row)->item(0)->nodeValue;
+				list($day, $month, $year) = explode(".", $date);
+				$date = $year . '-' . $month . '-' . $day;
 
 				$game = [	
 					'hteam'		=> $team_1,
@@ -40,19 +41,17 @@
 					'goals_ht'	=> $goals_1,
 					'goals_at'	=> $goals_2,
 					//	not sure if this matter so long as they're all the same...
-					'game_date'	=> new DateTime( $date, new DateTimeZone('UTC') )	
+					'game_date'	=> $date	
 				];
 
 				array_push($games, $game);
-
 
 			}	//	end foreach
 			
 		}	//	end if
 		return $games;
+
 	}	//	end crawlUrl
-	
-	crawlUrl("http://www.betexplorer.com/soccer/england/premier-league-2013-2014/results/");
 
 	//	http://www.betexplorer.com/soccer/england/premier-league-2013-2014/results/
 	//	/results shows ALL results, most recent first
