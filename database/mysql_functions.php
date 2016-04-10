@@ -13,8 +13,158 @@ function connectMySQLDB () {
 
 		return $mySQLcon;
 	} catch (PDOException $e) {
-		echo('Connection failed: ' . $e->getMessage());
+		exit('Connection failed: ' . $e->getMessage());
 	}
+}
+
+function executeSchema ($dbcon) {
+
+	try {
+		// create league_index table
+		$sqlQ = 'CREATE TABLE `bethub`.`league_index` (
+			`league_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+			`league_name` VARCHAR(50) NOT NULL DEFAULT '0',
+			`league_country` VARCHAR(50) NOT NULL DEFAULT '0',
+			`league_url` VARCHAR(50) NOT NULL DEFAULT '0',
+			PRIMARY KEY (`league_id`)
+		)
+		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit('Creation of league_index table failed - '.$e->getMessage());
+
+	try {
+
+		// create season_index table
+		$sqlQ = 'CREATE TABLE `bethub`.`season_index` (
+			`season_id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+			`season_year` YEAR NOT NULL,
+			`league_id` INT(11) UNSIGNED NOT NULL,
+			PRIMARY KEY (`season_id`),
+			INDEX `league_id_season_index` (`league_id`),
+			FOREIGN KEY (`league_id`) REFERENCES `league_index` (`league_id`)
+		)
+		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit('Creation of season_index table failed - '.$e->getMessage());
+	}
+
+	try {
+
+		// create team_index table
+		$sqlQ = 'CREATE TABLE `bethub`.`team_index` (
+			`team_id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+			`team_name` VARCHAR(50) NOT NULL,
+			`team_country` VARCHAR(50) NOT NULL,
+			`league_id` INT(10) UNSIGNED NOT NULL,
+			PRIMARY KEY (`team_id`),
+			INDEX `league_id_team` (`league_id`),
+			FOREIGN KEY (`league_id`) REFERENCES `league_index` (`league_id`)
+		)
+		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit('Creation of team_index table failed - '.$e->getMessage());
+	}
+
+	try {
+
+		// create fixture_index table
+		$sqlQ = 'CREATE TABLE `bethub`.`fixture_index` (
+			`fixture_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+			`home_team_id` INT(10) UNSIGNED NOT NULL,
+			`away_team_id` INT(10) UNSIGNED NOT NULL,
+			`game_date` DATE NOT NULL,
+			`season_id` INT(10) UNSIGNED NOT NULL,
+			PRIMARY KEY (`fixture_id`),
+			INDEX `season_id_ibfk_4` (`season_id`),
+			INDEX `home_team_id_ibfk_1` (`home_team_id`),
+			INDEX `away_team_id_ibfk_1` (`away_team_id`),
+			FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`),
+			FOREIGN KEY (`home_team_id`) REFERENCES `team_index` (`team_id`),
+			FOREIGN KEY (`away_team_id`) REFERENCES `team_index` (`team_id`)
+		)
+		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit('Creation of fixture_index table failed - '.$e->getMessage());
+	}
+
+	try {
+
+		// create home_result_index table
+		$sqlQ = 'CREATE TABLE `bethub`.`home_result_index` (
+			`game_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+			`game_date` DATE NOT NULL,
+			`game_points` TINYINT(4) NOT NULL,
+			`game_gf` TINYINT(4) NOT NULL,
+			`game_ga` TINYINT(4) NOT NULL,
+			`game_gd` SMALLINT(6) NOT NULL,
+			`season_id` INT(10) UNSIGNED NOT NULL,
+			`team_id` INT(10) UNSIGNED NOT NULL,
+			`fixture_id` INT(10) UNSIGNED NOT NULL,
+			PRIMARY KEY (`game_id`),
+			UNIQUE INDEX `fixture_id` (`fixture_id`),
+			INDEX `season_id_games` (`season_id`),
+			INDEX `team_id_games` (`team_id`),
+			FOREIGN KEY (`fixture_id`) REFERENCES `fixture_index` (`fixture_id`),
+			FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`),
+			FOREIGN KEY (`team_id`) REFERENCES `team_index` (`team_id`)
+		)
+		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit('Creation of home_result_index table failed - '.$e->getMessage());
+	}
+
+	try {
+
+		// create away_result_index table
+		$sqlQ = 'CREATE TABLE `bethub`.`away_result_index` (
+			`game_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+			`game_date` DATE NOT NULL,
+			`game_points` TINYINT(4) NOT NULL,
+			`game_gf` TINYINT(4) NOT NULL,
+			`game_ga` TINYINT(4) NOT NULL,
+			`game_gd` SMALLINT(6) NOT NULL,
+			`season_id` INT(10) UNSIGNED NOT NULL,
+			`team_id` INT(10) UNSIGNED NOT NULL,
+			`fixture_id` INT(10) UNSIGNED NOT NULL,
+			PRIMARY KEY (`game_id`),
+			UNIQUE INDEX `fixture_id` (`fixture_id`),
+			INDEX `season_id_games` (`season_id`),
+			INDEX `team_id_games` (`team_id`),
+			FOREIGN KEY (`fixture_id`) REFERENCES `fixture_index` (`fixture_id`),
+			FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`),
+			FOREIGN KEY (`team_id`) REFERENCES `team_index` (`team_id`)
+		)
+		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit('Creation of away_result_index table failed - '.$e->getMessage());
+	}
+
+	echo ('All tables created successfully!');
+	echo ("\r\n");
 }
 
 function insertLeague($dbcon, $league_name, $league_country, $league_url) {
@@ -191,6 +341,32 @@ function insertAwayGame($dbcon, $game_data, $season_id, $team_id, $fixture_id) {
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit($e->getMessage());
+	}
+}
+
+// get total points for a team as at a date in a given season
+function getTotalPoints($dbcon, $season_id, $team_id, $date) {
+	// UNTESTED! - if unexpected value returns, i suspect the fetch() isn't working properly
+
+	try {
+		$sqlQ = 'SELECT sum(tp.game_points) as total_points
+			FROM 
+				(SELECT hr.fixture_id, team_id as team_id, hr.game_points
+				FROM home_result_index hr
+				WHERE hr.team_id="'.$team_id.'" AND hr.game_date < "'.$date.'" AND hr.season_id="'.$season_id.'"
+				UNION ALL
+				SELECT ar.fixture_id, ar.team_id, ar.game_points
+				FROM away_result_index ar
+				WHERE ar.team_id="'.$team_id.'" AND ar.game_date < "'.$date.'" AND ar.season_id="'.$season_id.'") tp
+			GROUP BY tp.team_id';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+		$total_points = $sqlResponse->fetch()['total_points'];
 
 	} catch (PDOException $e) {
 		exit($e->getMessage());
