@@ -23,12 +23,12 @@ function executeSchema ($dbcon) {
 		// create league_index table
 		$sqlQ = 'CREATE TABLE `bethub`.`league_index` (
 			`league_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-			`league_name` VARCHAR(50) NOT NULL DEFAULT '0',
-			`league_country` VARCHAR(50) NOT NULL DEFAULT '0',
-			`league_url` VARCHAR(50) NOT NULL DEFAULT '0',
+			`league_name` VARCHAR(50) NOT NULL,
+			`league_country` VARCHAR(50) NOT NULL,
+			`league_url` VARCHAR(50) NOT NULL,
 			PRIMARY KEY (`league_id`)
 		)
-		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
@@ -47,7 +47,7 @@ function executeSchema ($dbcon) {
 			INDEX `league_id_season_index` (`league_id`),
 			FOREIGN KEY (`league_id`) REFERENCES `league_index` (`league_id`)
 		)
-		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+		COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
@@ -68,7 +68,7 @@ function executeSchema ($dbcon) {
 			INDEX `league_id_team` (`league_id`),
 			FOREIGN KEY (`league_id`) REFERENCES `league_index` (`league_id`)
 		)
-		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
@@ -94,7 +94,7 @@ function executeSchema ($dbcon) {
 			FOREIGN KEY (`home_team_id`) REFERENCES `team_index` (`team_id`),
 			FOREIGN KEY (`away_team_id`) REFERENCES `team_index` (`team_id`)
 		)
-		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
@@ -124,7 +124,7 @@ function executeSchema ($dbcon) {
 			FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`),
 			FOREIGN KEY (`team_id`) REFERENCES `team_index` (`team_id`)
 		)
-		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
@@ -154,7 +154,7 @@ function executeSchema ($dbcon) {
 			FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`),
 			FOREIGN KEY (`team_id`) REFERENCES `team_index` (`team_id`)
 		)
-		 COLLATE 'latin1_swedish_ci' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
+		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
@@ -372,3 +372,5 @@ function getTotalPoints($dbcon, $season_id, $team_id, $date) {
 		exit($e->getMessage());
 	}
 }
+
+?>
