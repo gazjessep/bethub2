@@ -35,6 +35,7 @@ function executeSchema ($dbcon) {
 
 	} catch (PDOException $e) {
 		exit('Creation of league_index table failed - '.$e->getMessage());
+	}
 
 	try {
 
@@ -341,6 +342,31 @@ function insertAwayGame($dbcon, $game_data, $season_id, $team_id, $fixture_id) {
 
 		$sqlResponse = $dbcon->prepare($sqlQ);
 		$sqlResponse->execute();
+
+	} catch (PDOException $e) {
+		exit($e->getMessage());
+	}
+}
+
+function getTotalPoints($dbcon, $season_id, $team_id, $date) {
+	// get season results/fixtures
+
+	try {
+		$sqlQ = 'SELECT sum(tp.game_points) as total_points
+			FROM 
+				(SELECT hr.fixture_id, team_id as team_id, hr.game_points
+				FROM home_result_index hr
+				WHERE hr.team_id="'.$team_id.'" AND hr.game_date < "'.$date.'" AND hr.season_id="'.$season_id.'"
+				UNION ALL
+				SELECT ar.fixture_id, ar.team_id, ar.game_points
+				FROM away_result_index ar
+				WHERE ar.team_id="'.$team_id.'" AND ar.game_date < "'.$date.'" AND ar.season_id="'.$season_id.'") tp
+			GROUP BY tp.team_id';
+
+		$sqlResponse = $dbcon->prepare($sqlQ);
+		$sqlResponse->execute();
+
+		$total_points = $sqlResponse->fetch()['total_points'];
 
 	} catch (PDOException $e) {
 		exit($e->getMessage());
