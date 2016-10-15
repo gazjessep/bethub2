@@ -395,6 +395,41 @@ class MySQLFunctions
             exit($e->getMessage());
         }
     }
+
+	function getTeamsListForSeason($dbcon, $season_id) {
+		try {
+			'SELECT DISTINCT home_team_id
+				FROM fixture_index
+			WHERE season_id=' . $season_id;
+
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $teamsList = $sqlResponse->fetchAll();
+
+            return $teamsList;
+
+        } catch (PDOException $e) {
+            exit($e->getMessage());
+        }
+	}
+
+
+/*
+SELECT tp.team_id, sum(tp.game_points) as total_points, (count(tp.game_points)*3) as total_potential, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
+    FROM 
+        (SELECT hr.fixture_id, team_id as team_id, hr.game_points
+        FROM home_result_index hr
+        WHERE hr.game_date < '2014-03-29' AND hr.season_id='6'
+        UNION ALL
+        SELECT ar.fixture_id, ar.team_id, ar.game_points
+        FROM away_result_index ar
+        WHERE ar.game_date < '2014-03-29' AND ar.season_id='6') tp
+    GROUP BY tp.team_id
+*/
+
+
+
 }
 
 ?>
