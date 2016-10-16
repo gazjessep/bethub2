@@ -1,16 +1,17 @@
 <?php
 namespace Database;
 
-$user = [
-    'name'		=> 'scott',
-    'database'	=> [
-        'ip'		=> '125.236.205.176',
-        'dbname'	=> 'bethub_testing',
-        'username'	=> 'scott',
-        'password'	=> 'SC0TTbethub'
-    ]
-];
+class Config {
 
-return $user;
+    public static $mySQL_config = [
+        'name'		=> 'scott',
+        'database'	=> [
+            'ip'		=> '125.236.205.176',
+            'dbname'	=> 'bethub',
+            'username'	=> 'scott',
+            'password'	=> 'SC0TTbethub'
+        ]
+    ];
+}
 
 ?>

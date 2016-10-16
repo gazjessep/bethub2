@@ -1,13 +1,16 @@
 <?php
 namespace Database;
 
+use PDO;
+use PDOException;
+
 class MySQLFunctions
 {
     //add class for MySQL
     function connectMySQLDB () {
 
         try {
-            $user = $this->user;
+            $user = Config::$mySQL_config;
             $db = $user['database'];
             $dbhost  = 'mysql:host='. $db['ip'] . ';dbname=' . $db['dbname'];
 
@@ -20,7 +23,7 @@ class MySQLFunctions
         }
     }
 
-    function executeSchema ($dbcon) {
+    function executeSchema (PDO $dbcon) {
 
         try {
             // create league_index table
@@ -171,13 +174,13 @@ class MySQLFunctions
         echo ("\r\n");
     }
 
-    function insertLeague($dbcon, $league_name, $league_country, $league_url) {
+    function insertLeague(PDO $dbcon, $league_name, $league_country, $league_url) {
 
         // insert team into team_index table
         try {
-            $sqlQ = 'INSERT INTO league_index
+            $sqlQ = "INSERT INTO league_index
 		(league_name, league_country, league_url) VALUES
-		("'.$league_name.'","'.$league_country.'","'.$league_url.'")';
+		('".$league_name."','".$league_country."','".$league_url."')";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -192,10 +195,10 @@ class MySQLFunctions
         }
     }
 
-    function leagueExists($dbcon, $league_name, $country) {
+    function leagueExists(PDO $dbcon, $league_name, $country) {
         // check if season exists, if true returns the season_id
         try {
-            $sqlQ = 'SELECT league_id FROM league_index WHERE league_name="'.$league_name.'" AND league_country="'.$country.'"';
+            $sqlQ = "SELECT league_id FROM league_index WHERE league_name='".$league_name."' AND league_country='".$country."'";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -212,10 +215,10 @@ class MySQLFunctions
         }
     }
 
-    function seasonExists($dbcon, $league_id, $year) {
+    function seasonExists(PDO $dbcon, $league_id, $year) {
         // check if season exists, if true returns the season_id
         try {
-            $sqlQ = 'SELECT season_id FROM season_index WHERE league_id="'.$league_id.'" AND season_year="'.$year.'"';
+            $sqlQ = "SELECT season_id FROM season_index WHERE league_id='".$league_id."' AND season_year='".$year."'";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -232,10 +235,10 @@ class MySQLFunctions
         }
     }
 
-    function teamExists($dbcon, $teamname, $country) {
+    function teamExists(PDO $dbcon, $teamname, $country) {
         // check if team exists, if true returns the team_id
         try {
-            $sqlQ = 'SELECT team_id FROM team_index WHERE team_name="'.$teamname.'" AND team_country="'.$country.'"';
+            $sqlQ = "SELECT team_id FROM team_index WHERE team_name='".$teamname."' AND team_country='".$country."'";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -252,13 +255,13 @@ class MySQLFunctions
         }
     }
 
-    function insertTeam($dbcon, $teamname, $country, $league_id) {
+    function insertTeam(PDO $dbcon, $teamname, $country, $league_id) {
 
         // insert team into team_index table
         try {
-            $sqlQ = 'INSERT INTO team_index
+            $sqlQ = "INSERT INTO team_index
 		(team_name, team_country, league_id) VALUES
-		("'.$teamname.'","'.$country.'","'.$league_id.'")';
+		('".$teamname."','".$country."','".$league_id."')";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -274,13 +277,13 @@ class MySQLFunctions
 
     }
 
-    function insertSeason($dbcon, $seasonyear, $league_id) {
+    function insertSeason(PDO $dbcon, $seasonyear, $league_id) {
 
         // insert team into team_index table
         try {
-            $sqlQ = 'INSERT INTO season_index
+            $sqlQ = "INSERT INTO season_index
 		(season_year, league_id) VALUES
-		("'.$seasonyear.'","'.$league_id.'")';
+		('".$seasonyear."','".$league_id."')";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -295,14 +298,14 @@ class MySQLFunctions
         }
     }
 
-    function insertFixture($dbcon, $game_date, $season_id, $hteam_id, $ateam_id) {
+    function insertFixture(PDO $dbcon, $game_date, $season_id, $hteam_id, $ateam_id) {
 
         // insert team into team_index table
 
         try {
-            $sqlQ = 'INSERT INTO `fixture_index`
+            $sqlQ = "INSERT INTO `fixture_index`
 		(home_team_id, away_team_id, game_date, season_id) VALUES
-		("'.$hteam_id.'","'.$ateam_id.'","'.$game_date.'","'.$season_id.'")';
+		('".$hteam_id."','".$ateam_id."','".$game_date."','".$season_id."')";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -317,14 +320,14 @@ class MySQLFunctions
         }
     }
 
-    function insertHomeGame($dbcon, $game_data, $season_id, $team_id, $fixture_id) {
+    function insertHomeGame(PDO $dbcon, $game_data, $season_id, $team_id, $fixture_id) {
 
         // insert team into team_index table
 
         try {
-            $sqlQ = 'INSERT INTO `home_result_index`
+            $sqlQ = "INSERT INTO `home_result_index`
 		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id, fixture_id) VALUES
-		("'.$game_data['game_date'].'","'.$game_data['homepoints'].'","'.$game_data['goalsfor'].'","'.$game_data['goalsagainst'].'","'.$game_data['goaldifference'].'","'.$season_id.'","'.$team_id.'","'.$fixture_id.'")';
+		('".$game_data['game_date']."','".$game_data['homepoints']."','".$game_data['goalsfor']."','".$game_data['goalsagainst']."','".$game_data['goaldifference']."','".$season_id."','".$team_id."','".$fixture_id."')";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -334,14 +337,14 @@ class MySQLFunctions
         }
     }
 
-    function insertAwayGame($dbcon, $game_data, $season_id, $team_id, $fixture_id) {
+    function insertAwayGame(PDO $dbcon, $game_data, $season_id, $team_id, $fixture_id) {
 
         // insert team into team_index table
 
         try {
-            $sqlQ = 'INSERT INTO `away_result_index`
+            $sqlQ = "INSERT INTO `away_result_index`
 		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id, fixture_id) VALUES
-		("'.$game_data['game_date'].'","'.$game_data['homepoints'].'","'.$game_data['goalsfor'].'","'.$game_data['goalsagainst'].'","'.$game_data['goaldifference'].'","'.$season_id.'","'.$team_id.'","'.$fixture_id.'")';
+		('".$game_data['game_date']."','".$game_data['homepoints']."','".$game_data['goalsfor']."','".$game_data['goalsagainst']."','".$game_data['goaldifference']."','".$season_id."','".$team_id."','".$fixture_id."')";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -351,39 +354,39 @@ class MySQLFunctions
         }
     }
 
-    function getTotalPoints($dbcon, $season_id, $team_id, $date) {
+    function getTotalPoints(PDO $dbcon, $season_id, $team_id, $date) {
         // get season results/fixtures
 
         try {
-            $sqlQ = 'SELECT sum(tp.game_points) as total_points
+            $sqlQ = "SELECT sum(tp.game_points) as total_points
 			FROM 
 				(SELECT hr.fixture_id, team_id as team_id, hr.game_points
 				FROM home_result_index hr
-				WHERE hr.team_id="'.$team_id.'" AND hr.game_date < "'.$date.'" AND hr.season_id="'.$season_id.'"
+				WHERE hr.team_id='".$team_id."' AND hr.game_date < '".$date."' AND hr.season_id='".$season_id."'
 				UNION ALL
 				SELECT ar.fixture_id, ar.team_id, ar.game_points
 				FROM away_result_index ar
-				WHERE ar.team_id="'.$team_id.'" AND ar.game_date < "'.$date.'" AND ar.season_id="'.$season_id.'") tp
-			GROUP BY tp.team_id';
+				WHERE ar.team_id='".$team_id."' AND ar.game_date < '".$date."' AND ar.season_id='".$season_id."') tp
+			GROUP BY tp.team_id";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
 
             $total_points = $sqlResponse->fetch()['total_points'];
+            return $total_points;
 
         } catch (PDOException $e) {
             exit($e->getMessage());
         }
     }
     // get all fixtures within a season
-    function getSeasonFixtures($dbcon, $season_id ) {
+    function getSeasonFixtures(PDO $dbcon, $season_id ) {
 
         try {
-            $sqlQ = 'SELECT *
-            FROM 
-                fixture_index
-            WHERE season_id='.$season_id.
-                'ORDER BY game_date ASC';
+            $sqlQ = "SELECT *
+            FROM fixture_index
+            WHERE season_id='".$season_id."
+            'ORDER BY game_date ASC";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -396,9 +399,9 @@ class MySQLFunctions
         }
     }
 
-	function getTeamsListForSeason($dbcon, $season_id) {
+	function getTeamsListForSeason(PDO $dbcon, $season_id) {
 		try {
-			'SELECT DISTINCT home_team_id
+			$sqlQ = 'SELECT DISTINCT home_team_id
 				FROM fixture_index
 			WHERE season_id=' . $season_id;
 
@@ -413,6 +416,50 @@ class MySQLFunctions
             exit($e->getMessage());
         }
 	}
+
+    function getPointsRatio(PDO $dbcon, $season_id, $fixture_date) {
+        try {
+            $sqlQ = "SELECT tp.team_id, sum(tp.game_points) as total_points, (count(tp.game_points)*3) as total_potential, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
+			    FROM 
+				(SELECT hr.fixture_id, team_id as team_id, hr.game_points
+				FROM home_result_index hr
+				WHERE hr.game_date < '".$fixture_date."' AND hr.season_id='".$season_id."'
+				UNION ALL
+				SELECT ar.fixture_id, ar.team_id, ar.game_points
+				FROM away_result_index ar
+				WHERE ar.game_date < '".$fixture_date."' AND ar.season_id='".$season_id."') tp
+			    GROUP BY tp.team_id";
+
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $pointsRatio = $sqlResponse->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            return $pointsRatio;
+
+        } catch (PDOException $e) {
+            exit($e->getMessage());
+        }
+    }
+
+    // Gets the result from the home teams perspective
+    function getResult(PDO $dbcon, $fixture_id) {
+        try {
+            $sqlQ = "SELECT *
+                FROM home_result_index hr
+                WHERE hr.fixture_id='".$fixture_id."'";
+
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $result = $sqlResponse->fetch();
+
+            return $result;
+
+        } catch (PDOException $e) {
+            exit($e->getMessage());
+        }
+    }
 
 
 /*
