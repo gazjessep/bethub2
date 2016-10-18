@@ -1,11 +1,10 @@
 <?php
 
 namespace Database;
-
+include_once('mysql_functions.php');
+include_once('crawler.php');
 Class Index
 {
-//include_once('mysql_functions.php');
-//include_once('crawler.php');
 
     function addSeason ($league_name = 'english_premier_league', $league_country = 'england', $league_url = 'england/premier-league-', $year = 2013)
     {

@@ -3,6 +3,9 @@ namespace Database;
 
 use PDO;
 use PDOException;
+include_once('crawler.php');
+include_once('index.php');
+include_once('config.php');
 
 class MySQLFunctions
 {
@@ -10,9 +13,9 @@ class MySQLFunctions
     function connectMySQLDB () {
 
         try {
-            $user = Config::$mySQL_config;
+            $user = Config::$mySQL_config_local;
             $db = $user['database'];
-            $dbhost  = 'mysql:host='. $db['ip'] . ';dbname=' . $db['dbname'];
+            $dbhost  = 'mysql:host='. $db['ip'] . ';port=' . $db['port'] . ';dbname=' . $db['dbname'];
 
             $mySQLcon = new PDO($dbhost, $db['username'], $db['password']);
             $mySQLcon->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -170,6 +173,38 @@ class MySQLFunctions
             exit('Creation of away_result_index table failed - '.$e->getMessage());
         }
 
+        try {
+
+            // create test_results table
+            $sqlQ = 'CREATE TABLE `test_results` (
+                `results_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `season_id` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
+                `draw_coefficient` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `home_total` INT(5) NOT NULL DEFAULT \'0\',
+                `home_correct` INT(5) NOT NULL DEFAULT \'0\',
+                `home_ratio` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `away_total` INT(5) NOT NULL DEFAULT \'0\',
+                `away_correct` INT(5) NOT NULL DEFAULT \'0\',
+                `away_ratio` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `draw_total` INT(5) NOT NULL DEFAULT \'0\',
+                `draw_correct` INT(5) NOT NULL DEFAULT \'0\',
+                `draw_ratio` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `total_all` INT(5) NOT NULL DEFAULT \'0\',
+                `total_correct` INT(5) NOT NULL DEFAULT \'0\',
+                `total_ratio` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                PRIMARY KEY (`results_id`),
+                INDEX `season_id` (`season_id`),
+                CONSTRAINT `FK_test_results_season_index` FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`)
+            )
+            COLLATE=\'latin1_swedish_ci\' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1;';
+
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+        } catch (PDOException $e) {
+            exit('Creation of test_results table failed - '.$e->getMessage());
+        }
+
         echo ('All tables created successfully!');
         echo ("\r\n");
     }
@@ -191,7 +226,7 @@ class MySQLFunctions
 
             return $league_id;
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error inserting league : '.$e->getMessage());
         }
     }
 
@@ -205,7 +240,7 @@ class MySQLFunctions
 
             $results = $sqlResponse->fetchAll();
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error checking league exists : '.$e->getMessage());
         }
 
         if (count($results) == 1) {
@@ -225,7 +260,7 @@ class MySQLFunctions
 
             $results = $sqlResponse->fetchAll();
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error checking season exists : '.$e->getMessage());
         }
 
         if (count($results) == 1) {
@@ -245,7 +280,7 @@ class MySQLFunctions
 
             $results = $sqlResponse->fetchAll();
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error checking team exists : '.$e->getMessage());
         }
 
         if (count($results) == 1) {
@@ -272,7 +307,7 @@ class MySQLFunctions
 
             return $teamID;
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error inserting team : '.$e->getMessage());
         }
 
     }
@@ -294,7 +329,7 @@ class MySQLFunctions
 
             return $seasonID;
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error inserting season : '.$e->getMessage());
         }
     }
 
@@ -316,7 +351,7 @@ class MySQLFunctions
 
             return $fixtureID;
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error inserting fixture : '.$e->getMessage());
         }
     }
 
@@ -333,7 +368,7 @@ class MySQLFunctions
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error inserting home game : '.$e->getMessage());
         }
     }
 
@@ -350,7 +385,7 @@ class MySQLFunctions
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error inserting away game : '.$e->getMessage());
         }
     }
 
@@ -376,17 +411,19 @@ class MySQLFunctions
             return $total_points;
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error getting total points : '.$e->getMessage());
         }
     }
     // get all fixtures within a season
     function getSeasonFixtures(PDO $dbcon, $season_id ) {
 
         try {
-            $sqlQ = "SELECT *
-            FROM fixture_index
-            WHERE season_id='".$season_id."
-            'ORDER BY game_date ASC";
+            $sqlQ = "SELECT fi.fixture_id, fi.home_team_id, fi.away_team_id, fi.game_date, hr.game_points
+            FROM fixture_index fi
+            INNER JOIN home_result_index hr
+            ON fi.fixture_id = hr.fixture_id
+            WHERE fi.season_id='".$season_id."
+            'ORDER BY fi.game_date ASC";
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
@@ -395,7 +432,7 @@ class MySQLFunctions
             return $fixtures;
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error getting season fixtures : '.$e->getMessage());
         }
     }
 
@@ -413,13 +450,13 @@ class MySQLFunctions
             return $teamsList;
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error getting teams : '.$e->getMessage());
         }
 	}
 
     function getPointsRatio(PDO $dbcon, $season_id, $fixture_date) {
         try {
-            $sqlQ = "SELECT tp.team_id, sum(tp.game_points) as total_points, (count(tp.game_points)*3) as total_potential, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
+            $sqlQ = "SELECT tp.team_id, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
 			    FROM 
 				(SELECT hr.fixture_id, team_id as team_id, hr.game_points
 				FROM home_result_index hr
@@ -438,7 +475,36 @@ class MySQLFunctions
             return $pointsRatio;
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error getting points ratio : '.$e->getMessage());
+        }
+    }
+
+    function getFormRatio(PDO $dbcon, $season_id, $fixture_date) {
+        // Get the fixture date and filter results in the past 28 days
+        $fixture_date_time = new \DateTime($fixture_date);
+        $filter_date_time = $fixture_date_time->modify('-40 days');
+        $filter_date = $filter_date_time->format('Y-m-d');
+        try {
+            $sqlQ = "SELECT tp.team_id, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
+			    FROM 
+				(SELECT hr.fixture_id, hr.team_id, hr.game_points
+				FROM home_result_index hr
+				WHERE hr.game_date > '".$filter_date."' AND hr.game_date < '".$fixture_date."' AND hr.season_id='".$season_id."'
+				UNION ALL
+				SELECT ar.fixture_id, ar.team_id, ar.game_points
+				FROM away_result_index ar
+				WHERE ar.game_date > '".$filter_date."' AND ar.game_date < '".$fixture_date."' AND ar.season_id='".$season_id."') tp
+			    GROUP BY tp.team_id";
+
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $pointsRatio = $sqlResponse->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            return $pointsRatio;
+
+        } catch (PDOException $e) {
+            exit('Error getting form ratio : '.$e->getMessage());
         }
     }
 
@@ -457,26 +523,25 @@ class MySQLFunctions
             return $result;
 
         } catch (PDOException $e) {
-            exit($e->getMessage());
+            exit('Error getting result : '.$e->getMessage());
         }
     }
 
+    // Store the results of predicted season
+    function storePredictions(PDO $dbcon, $season_id, $draw_coefficient, $results) {
+        try {
+            $sqlQ = "INSERT INTO `test_results`
+		        (season_id, draw_coefficient, home_total, home_correct, home_ratio, away_total, away_correct, away_ratio, draw_total, draw_correct, draw_ratio, total_all, total_correct, total_ratio) VALUES
+		        ('".$season_id."','".$draw_coefficient."','".$results['Home']['Games']."','".$results['Home']['Correct']."','".$results['Home']['Ratio Correct'].
+                "','".$results['Away']['Games']."','".$results['Away']['Correct']."','".$results['Away']['Ratio Correct']."','".$results['Draw']['Games']."','".
+                $results['Draw']['Correct']."','".$results['Draw']['Ratio Correct']."','".$results['Total']['Games']. "','".$results['Total']['Correct']."','".$results['Total']['Ratio Correct']."')";
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
 
-/*
-SELECT tp.team_id, sum(tp.game_points) as total_points, (count(tp.game_points)*3) as total_potential, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
-    FROM 
-        (SELECT hr.fixture_id, team_id as team_id, hr.game_points
-        FROM home_result_index hr
-        WHERE hr.game_date < '2014-03-29' AND hr.season_id='6'
-        UNION ALL
-        SELECT ar.fixture_id, ar.team_id, ar.game_points
-        FROM away_result_index ar
-        WHERE ar.game_date < '2014-03-29' AND ar.season_id='6') tp
-    GROUP BY tp.team_id
-*/
-
-
-
+        } catch (PDOException $e) {
+            exit('Error storing predictions : '.$e->getMessage());
+        }
+    }
 }
 
 ?>

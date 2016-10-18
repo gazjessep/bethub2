@@ -1,10 +1,9 @@
 <?php
 
-use Testing\Model;
+include_once('test.php');
 
 echo('Starting test...'."\r\n");
 
-$var = new Testing\Model();
+$class = new Testing\Model();
 
-$var->testPredictions();
-
+$class->testIndex();

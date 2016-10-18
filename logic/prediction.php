@@ -4,46 +4,51 @@ namespace Logic;
 
 use Database;
 use DateTime;
+use PDO;
 
-// include_once('/../database/mysql_functions.php');
+ include_once('../database/mysql_functions.php');
 class PredictGames
 {
 	function determineWinner ($fixture, $draw_coefficient, $season_id) {
 		$home_team_id = $fixture['home_team_id'];
 		$away_team_id = $fixture['away_team_id'];
 		$fixture_date_string = $fixture['game_date'];
-        $fixture_id = $fixture['fixture_id'];
+//        $fixture_id = $fixture['fixture_id'];
+        $game_points = $fixture['game_points'];
 		
 		$mySQL = new Database\MySQLFunctions();
 		$dbcon = $mySQL->connectMySQLDB();
 
-        // We want to store the result of this query as at the date and season passed - as it returns all teams (as at that date)
-		$pointsRatio = $mySQL->getPointsRatio($dbcon, $season_id, $fixture_date_string);
+        $leaguePositions = $this->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixture_date_string);
+        $form = $this->checkForm($dbcon, $mySQL, $season_id, $fixture_date_string);
 
-        print_r($pointsRatio);
-        exit("\r\r");
+        $powerRankings = $this->useAlgorithm($leaguePositions, $form);
 
+        // Checking if the game has already been played, if it has we will check the result
         $fixture_date = new DateTime($fixture_date_string);
         $date_today = new DateTime();
         $date_today->modify('-2 days');
 
-        if (floatval($pointsRatio[$home_team_id]['ratio'] - $pointsRatio[$away_team_id]['ratio']) > $draw_coefficient) {
+        // Home Boost is hardcoded for now
+        $home_booster = 1.25;
+
+        if (floatval(($powerRankings[$home_team_id] * $home_booster) - $powerRankings[$away_team_id]) > $draw_coefficient) {
             // Home team wins, need to check whether the game has happened. Need to deal with timezones at some point
             if ($fixture_date > $date_today) {
                 return 'Home';
             } else {
-                $pred_result = $this->checkResult($dbcon, $mySQL, $fixture_id, 'home');
+                $pred_result = $this->checkResult('home', $game_points);
                 $return = [
                     'Prediction' => 'Home',
                     'Correct' => $pred_result
                 ];
             }
-        } elseif (floatval($pointsRatio[$away_team_id]['ratio'] - $pointsRatio[$home_team_id]['ratio']) > $draw_coefficient) {
+        } elseif (floatval($powerRankings[$away_team_id] - ($powerRankings[$home_team_id] * $home_booster)) > $draw_coefficient) {
             // Away team wins, need to check whether the game has happened. Need to deal with timezones at some point
             if ($fixture_date > $date_today) {
                 return 'Away';
             } else {
-                $pred_result = $this->checkResult($dbcon, $mySQL, $fixture_id, 'away');
+                $pred_result = $this->checkResult('away', $game_points);
                 $return = [
                     'Prediction' => 'Away',
                     'Correct' => $pred_result
@@ -54,7 +59,7 @@ class PredictGames
             if ($fixture_date > $date_today) {
                 return 'Draw';
             } else {
-                $pred_result = $this->checkResult($dbcon, $mySQL, $fixture_id, 'draw');
+                $pred_result = $this->checkResult('draw', $game_points);
                 $return = [
                     'Prediction' => 'Draw',
                     'Correct' => $pred_result
@@ -64,10 +69,9 @@ class PredictGames
         return $return;
 	}
 	
-	function checkResult($dbcon, Database\MySQLFunctions $mySQL, $fixture_id, $prediction) {
-		$result = $mySQL->getResult($dbcon, $fixture_id);
+	function checkResult($prediction, $game_points) {
 
-        if ($result['game_points'] == 3) {
+        if ($game_points == 3) {
             // Home team won
             if ($prediction == 'home') {
                 // Prediction Correct
@@ -76,7 +80,7 @@ class PredictGames
                 //Prediction Incorrect
                 return 'No';
             }
-        } elseif ($result['game_points'] == 0) {
+        } elseif ($game_points == 0) {
             // Away team won
             if ($prediction == 'away') {
                 // Prediction Correct
@@ -96,6 +100,45 @@ class PredictGames
             }
         }
 	}
+
+    function checkLeaguePosition(PDO $dbcon, Database\MySQLFunctions $mySQL, $season_id, $fixture_date_string) {
+        // We want to store the result of this query as at the date and season passed - as it returns all teams (as at that date)
+        // This essentially brings back a ratio of points won for the entire season (ie. league position)
+        $pointsRatio = $mySQL->getPointsRatio($dbcon, $season_id, $fixture_date_string);
+
+        return $pointsRatio;
+    }
+    function checkForm(PDO $dbcon, Database\MySQLFunctions $mySQL, $season_id, $fixture_date_string) {
+        // We want to store the result of this query as at the date and season passed - as it returns all teams (as at that date)
+        // This essentially brings back a ratio of points won in the last 4 games (ie. form)
+        $pointsRatio = $mySQL->getFormRatio($dbcon, $season_id, $fixture_date_string);
+
+        return $pointsRatio;
+    }
+    function useAlgorithm($leaguePositions, $form) {
+        // Merge the different coefficients into a final power ranking value
+        $powerRankings = [];
+
+        // Calculate the form average in case a team hasn't played a game in the past 40 days
+        $totalAverage = 0;
+        foreach ($form as $value) {
+            $totalAverage += floatval($value);
+        }
+        $formAverage = $totalAverage/count($form);
+
+        // For now we hard code our weightings
+        $form_weighting = 1;
+        $leaguePosition_weighting = 0.2;
+        foreach($leaguePositions as $team => $leaguePosition) {
+            if (isset($form[$team])) {
+                $powerRankings[$team] = ($leaguePosition_weighting * floatval($leaguePosition)) + ($form_weighting * floatval($form[$team]));
+            } else {
+                $powerRankings[$team] = ($leaguePosition_weighting * floatval($leaguePosition)) + $formAverage;
+            }
+        }
+
+        return $powerRankings;
+    }
 }
 
 

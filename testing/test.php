@@ -3,16 +3,27 @@ namespace Testing;
 
 use Database;
 use Logic;
+include_once('../database/mysql_functions.php');
+include_once('../logic/prediction.php');
 
 class Model
 {
-	function testPredictions () {
-	    echo('Testing Predictions...'."\r\n");
-	    // these are hardcoded for now
-        $draw_coefficient = '0.15';
-		$season_id = '6';
+    function testIndex() {
+        // Season is hardcoded for now
+        $season_id = '1';
 
-		$fixtures = $this->getSeason($season_id);
+        // Get the seasons results & fixtures
+        $fixtures = $this->getSeason($season_id);
+
+        // Loop through our draw/win cutoff
+        foreach (range(0.05, 0.5, 0.01) as $draw_coefficient) {
+            $results = $this->testPredictions($draw_coefficient, $season_id, $fixtures);
+            $this->storePredictions($season_id, $draw_coefficient, $results);
+        }
+    }
+	function testPredictions($draw_coefficient, $season_id, $fixtures) {
+	    echo('Testing Predictions for '.$draw_coefficient.'...'."\r\n");
+
         $prediction = new Logic\PredictGames();
 
 		$teamsArray = [];
@@ -33,9 +44,9 @@ class Model
 
 		foreach ($fixtures as $fixture) {
 		    // To ensure that all teams have played at least once, before we make a prediction
-			if (count($teamsList) > 0) {
-				unset($teamsList[$fixture['home_team_id']]);
-				unset($teamsList[$fixture['away_team_id']]);
+			if (count($teamsArray) > 0) {
+				unset($teamsArray[$fixture['home_team_id']]);
+				unset($teamsArray[$fixture['away_team_id']]);
 				continue;
 			}
 			$predictedResult = $prediction->determineWinner($fixture, $draw_coefficient, $season_id);
@@ -90,10 +101,10 @@ class Model
                 'Ratio Correct' => $correctCount_draw/$totalCount_draw
             ]
         ];
-        print_r($resultsArray);
+        return $resultsArray;
 	}
 	
-	function getSeason ($season_id) {
+	function getSeason($season_id) {
 		$mySQL = new Database\MySQLFunctions();
 		$dbcon = $mySQL->connectMySQLDB();
 		
@@ -102,15 +113,21 @@ class Model
 		return $fixtures;
 	}
 
-	function getTeamsListForSeason ($season_id) {
+	function getTeamsListForSeason($season_id) {
 		$mySQL = new Database\MySQLFunctions();
 		$dbcon = $mySQL->connectMySQLDB();
 		
-		$teamsList = $mySQL->getSeasonFixtures($dbcon, $season_id);
+		$teamsList = $mySQL->getTeamsListForSeason($dbcon, $season_id);
 		
 		return $teamsList;
-	}	
-	
+	}
+
+    function storePredictions($season_id, $draw_coefficient, $results) {
+        $mySQL = new Database\MySQLFunctions();
+        $dbcon = $mySQL->connectMySQLDB();
+
+        $mySQL->storePredictions($dbcon, $season_id, $draw_coefficient, $results);
+    }
 }
 	
 ?>
