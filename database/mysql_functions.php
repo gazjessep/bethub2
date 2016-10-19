@@ -176,10 +176,36 @@ class MySQLFunctions
         try {
 
             // create test_results table
-            $sqlQ = 'CREATE TABLE `test_results` (
-                `results_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            $sqlQ = 'CREATE TABLE `testing_index` (
+                `testing_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
                 `season_id` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
                 `draw_coefficient` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `home_booster` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `lp_weighting` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `form_weighting` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                PRIMARY KEY (`testing_id`),
+                INDEX `season_id` (`season_id`),
+                CONSTRAINT `FK_testing_index_season_index` FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`)
+                )
+            COLLATE=\'latin1_swedish_ci\'
+            ENGINE=InnoDB
+            ROW_FORMAT=COMPACT
+            AUTO_INCREMENT=1
+            ;';
+
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+        } catch (PDOException $e) {
+            exit('Creation of testing_index table failed - '.$e->getMessage());
+        }
+
+        try {
+
+            // create test_results table
+            $sqlQ = 'CREATE TABLE `testing_result_index` (
+                `testing_result_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `testing_id` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
                 `home_total` INT(5) NOT NULL DEFAULT \'0\',
                 `home_correct` INT(5) NOT NULL DEFAULT \'0\',
                 `home_ratio` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
@@ -192,17 +218,22 @@ class MySQLFunctions
                 `total_all` INT(5) NOT NULL DEFAULT \'0\',
                 `total_correct` INT(5) NOT NULL DEFAULT \'0\',
                 `total_ratio` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
-                PRIMARY KEY (`results_id`),
-                INDEX `season_id` (`season_id`),
-                CONSTRAINT `FK_test_results_season_index` FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`)
+                PRIMARY KEY (`testing_result_id`),
+                INDEX `testing_id` (`testing_id`),
+                CONSTRAINT `FK_test_results_testing_index` FOREIGN KEY (`testing_id`) REFERENCES `testing_index` (`testing_id`)
             )
-            COLLATE=\'latin1_swedish_ci\' ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1;';
+            COLLATE=\'latin1_swedish_ci\'
+            ENGINE=InnoDB
+            ROW_FORMAT=COMPACT
+            AUTO_INCREMENT=1
+            ;
+            ';
 
             $sqlResponse = $dbcon->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
-            exit('Creation of test_results table failed - '.$e->getMessage());
+            exit('Creation of testing_result_index table failed - '.$e->getMessage());
         }
 
         echo ('All tables created successfully!');
