@@ -9,7 +9,7 @@ use PDO;
  include_once('../database/mysql_functions.php');
 class PredictGames
 {
-	function determineWinner ($fixture, $draw_coefficient, $season_id) {
+	function determineWinner ($fixture, $draw_coefficient, $home_booster, $season_id) {
 		$home_team_id = $fixture['home_team_id'];
 		$away_team_id = $fixture['away_team_id'];
 		$fixture_date_string = $fixture['game_date'];
@@ -28,9 +28,6 @@ class PredictGames
         $fixture_date = new DateTime($fixture_date_string);
         $date_today = new DateTime();
         $date_today->modify('-2 days');
-
-        // Home Boost is hardcoded for now
-        $home_booster = 1.25;
 
         if (floatval(($powerRankings[$home_team_id] * $home_booster) - $powerRankings[$away_team_id]) > $draw_coefficient) {
             // Home team wins, need to check whether the game has happened. Need to deal with timezones at some point
@@ -115,7 +112,7 @@ class PredictGames
 
         return $pointsRatio;
     }
-    function useAlgorithm($leaguePositions, $form) {
+    function useAlgorithm($leaguePositions, $form, $lp_weighting) {
         // Merge the different coefficients into a final power ranking value
         $powerRankings = [];
 
@@ -128,12 +125,12 @@ class PredictGames
 
         // For now we hard code our weightings
         $form_weighting = 1;
-        $leaguePosition_weighting = 0.2;
+//        $leaguePosition_weighting = 0.1;
         foreach($leaguePositions as $team => $leaguePosition) {
             if (isset($form[$team])) {
-                $powerRankings[$team] = ($leaguePosition_weighting * floatval($leaguePosition)) + ($form_weighting * floatval($form[$team]));
+                $powerRankings[$team] = ($lp_weighting * floatval($leaguePosition)) + ($form_weighting * floatval($form[$team]));
             } else {
-                $powerRankings[$team] = ($leaguePosition_weighting * floatval($leaguePosition)) + $formAverage;
+                $powerRankings[$team] = ($lp_weighting * floatval($leaguePosition)) + $formAverage;
             }
         }
 

@@ -181,8 +181,8 @@ class MySQLFunctions
                 `season_id` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
                 `draw_coefficient` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
                 `home_booster` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
-                `lp_weighting` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
-                `form_weighting` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `lp_weighting` DECIMAL(5,2) NULL DEFAULT \'0.00\',
+                `form_weighting` DECIMAL(5,2) NULL DEFAULT \'0.00\',
                 PRIMARY KEY (`testing_id`),
                 INDEX `season_id` (`season_id`),
                 CONSTRAINT `FK_testing_index_season_index` FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`)
@@ -559,11 +559,32 @@ class MySQLFunctions
     }
 
     // Store the results of predicted season
-    function storePredictions(PDO $dbcon, $season_id, $draw_coefficient, $results) {
+    function storeTestingParameters(PDO $dbcon, $testingParameters) {
         try {
-            $sqlQ = "INSERT INTO `test_results`
-		        (season_id, draw_coefficient, home_total, home_correct, home_ratio, away_total, away_correct, away_ratio, draw_total, draw_correct, draw_ratio, total_all, total_correct, total_ratio) VALUES
-		        ('".$season_id."','".$draw_coefficient."','".$results['Home']['Games']."','".$results['Home']['Correct']."','".$results['Home']['Ratio Correct'].
+            $sqlQ = "INSERT INTO `testing_index`
+		        (season_id, draw_coefficient, home_booster, lp_weighting, form_weighting) VALUES
+		        ('".$testingParameters['season_id']."','".$testingParameters['draw_coefficient']."','".$testingParameters['home_booster']."','".$testingParameters['lp_weighting'].
+                "','".$testingParameters['form_weighting']."')";
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $sqlID = $dbcon->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID->execute();
+            $testingID = $sqlID->fetch()['LAST_INSERT_ID()'];
+
+            return $testingID;
+
+        } catch (PDOException $e) {
+            exit('Error storing predictions : '.$e->getMessage());
+        }
+    }
+
+    // Store the results of predicted season
+    function storePredictions(PDO $dbcon, $testing_id, $results) {
+        try {
+            $sqlQ = "INSERT INTO `testing_result_index`
+		        (testing_id, home_total, home_correct, home_ratio, away_total, away_correct, away_ratio, draw_total, draw_correct, draw_ratio, total_all, total_correct, total_ratio) VALUES
+		        ('".$testing_id."','".$results['Home']['Games']."','".$results['Home']['Correct']."','".$results['Home']['Ratio Correct'].
                 "','".$results['Away']['Games']."','".$results['Away']['Correct']."','".$results['Away']['Ratio Correct']."','".$results['Draw']['Games']."','".
                 $results['Draw']['Correct']."','".$results['Draw']['Ratio Correct']."','".$results['Total']['Games']. "','".$results['Total']['Correct']."','".$results['Total']['Ratio Correct']."')";
             $sqlResponse = $dbcon->prepare($sqlQ);

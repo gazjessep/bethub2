@@ -16,13 +16,17 @@ class Model
         $fixtures = $this->getSeason($season_id);
 
         // Loop through our draw/win cutoff
-        foreach (range(0.05, 0.5, 0.01) as $draw_coefficient) {
-            $results = $this->testPredictions($draw_coefficient, $season_id, $fixtures);
-            $this->storePredictions($season_id, $draw_coefficient, $results);
+        foreach (range(0.05, 0.25, 0.01) as $draw_coefficient) {
+            foreach (range(0.7, 1.3, 0.1) as $home_booster) {
+                $testingID = $this->storeTestingParameters($season_id, $draw_coefficient,$home_booster);
+                $results = $this->testPredictions($draw_coefficient, $home_booster, $season_id, $fixtures);
+                $this->storePredictions($testingID, $results);
+            }
         }
     }
-	function testPredictions($draw_coefficient, $season_id, $fixtures) {
-	    echo('Testing Predictions for '.$draw_coefficient.'...'."\r\n");
+	function testPredictions($draw_coefficient, $home_booster, $season_id, $fixtures) {
+	    echo('Testing Predictions for Draw Coefficient of '.$draw_coefficient.'...'."\r\n");
+        echo('and Home Booster of '.$home_booster.'...'."\r\n");
 
         $prediction = new Logic\PredictGames();
 
@@ -49,7 +53,7 @@ class Model
 				unset($teamsArray[$fixture['away_team_id']]);
 				continue;
 			}
-			$predictedResult = $prediction->determineWinner($fixture, $draw_coefficient, $season_id);
+			$predictedResult = $prediction->determineWinner($fixture, $draw_coefficient, $home_booster, $season_id);
             if (!empty($predictedResult['Prediction']) && !empty($predictedResult['Correct'])) {
                 if ($predictedResult['Prediction'] == 'Home') {
                     $totalCount_all++;
@@ -122,11 +126,27 @@ class Model
 		return $teamsList;
 	}
 
-    function storePredictions($season_id, $draw_coefficient, $results) {
+    function storeTestingParameters($season_id, $draw_coefficient, $home_booster, $lp_weighting = null, $form_weighting = null) {
         $mySQL = new Database\MySQLFunctions();
         $dbcon = $mySQL->connectMySQLDB();
 
-        $mySQL->storePredictions($dbcon, $season_id, $draw_coefficient, $results);
+        $testingParameters = [
+            'season_id' => $season_id,
+            'draw_coefficient' => $draw_coefficient,
+            'home_booster' => $home_booster,
+            'lp_weighting' => $lp_weighting,
+            'form_weighting' => $form_weighting
+        ];
+
+        $testingID = $mySQL->storeTestingParameters($dbcon, $testingParameters);
+        return $testingID;
+    }
+
+    function storePredictions($testingID, $results) {
+        $mySQL = new Database\MySQLFunctions();
+        $dbcon = $mySQL->connectMySQLDB();
+
+        $mySQL->storePredictions($dbcon, $testingID, $results);
     }
 }
 	
