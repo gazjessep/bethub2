@@ -181,8 +181,8 @@ class MySQLFunctions
                 `season_id` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
                 `draw_coefficient` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
                 `home_booster` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
-                `lp_weighting` DECIMAL(5,2) NULL DEFAULT \'0.00\',
-                `form_weighting` DECIMAL(5,2) NULL DEFAULT \'0.00\',
+                `lp_weighting` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
+                `form_weighting` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
                 PRIMARY KEY (`testing_id`),
                 INDEX `season_id` (`season_id`),
                 CONSTRAINT `FK_testing_index_season_index` FOREIGN KEY (`season_id`) REFERENCES `season_index` (`season_id`)

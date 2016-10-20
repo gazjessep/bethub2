@@ -126,7 +126,7 @@ class Model
 		return $teamsList;
 	}
 
-    function storeTestingParameters($season_id, $draw_coefficient, $home_booster, $lp_weighting = null, $form_weighting = null) {
+    function storeTestingParameters($season_id, $draw_coefficient, $home_booster, $lp_weighting = 0.00, $form_weighting = 0.00) {
         $mySQL = new Database\MySQLFunctions();
         $dbcon = $mySQL->connectMySQLDB();
 

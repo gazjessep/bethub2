@@ -112,7 +112,7 @@ class PredictGames
 
         return $pointsRatio;
     }
-    function useAlgorithm($leaguePositions, $form, $lp_weighting) {
+    function useAlgorithm($leaguePositions, $form, $lp_weighting = 1, $form_weighting = 1) {
         // Merge the different coefficients into a final power ranking value
         $powerRankings = [];
 
@@ -123,9 +123,6 @@ class PredictGames
         }
         $formAverage = $totalAverage/count($form);
 
-        // For now we hard code our weightings
-        $form_weighting = 1;
-//        $leaguePosition_weighting = 0.1;
         foreach($leaguePositions as $team => $leaguePosition) {
             if (isset($form[$team])) {
                 $powerRankings[$team] = ($lp_weighting * floatval($leaguePosition)) + ($form_weighting * floatval($form[$team]));
