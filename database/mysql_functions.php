@@ -178,6 +178,7 @@ class MySQLFunctions
             // create test_results table
             $sqlQ = 'CREATE TABLE `testing_index` (
                 `testing_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `season_id` INT(10) UNSIGNED NOT NULL DEFAULT \'0\',
                 `draw_coefficient` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
                 `home_booster` DECIMAL(5,2) NOT NULL DEFAULT \'0.00\',
