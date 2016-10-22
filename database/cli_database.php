@@ -9,7 +9,7 @@ include_once('index.php');
 //
 //$mysql->executeSchema($dbconnection);
 echo('Inserting season...'."\r\n");
-$index = new \Database\Index();
+$index = new Database\Index();
 
 $league_name = 'english_premier_league';
 $league_country = 'england';

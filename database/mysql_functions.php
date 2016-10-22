@@ -3,8 +3,8 @@ namespace Database;
 
 use PDO;
 use PDOException;
+
 include_once('crawler.php');
-//include_once('index.php');
 include_once('config.php');
 
 class MySQLFunctions

@@ -15,14 +15,6 @@ Class Index
             throw new $e($e->getMessage());
         }
 
-
-        // currently this section is hardcoded
-//        $league_name = 'english_premier_league';
-//        $league_country = 'england';
-//        $league_url = 'england/premier-league-';
-//        $year = 2013;
-        //
-
         if ($league_id = $mySQL->leagueExists($mySQLcon, $league_name, $league_country)) {
             echo('League already exists...Continuing...'."\r\n");
         } else {
@@ -30,7 +22,7 @@ Class Index
         }
 
         if ($season_id = $mySQL->seasonExists($mySQLcon, $league_id, $year)) {
-            echo('Warning: Season already exists, already scraped!');
+            echo('Warning: Season already exists, already scraped!'. "\r\n");
             return 'Season_exists';
         } else {
             $season_id = $mySQL->insertSeason($mySQLcon, $year, $league_id);

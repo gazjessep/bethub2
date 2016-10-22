@@ -3,14 +3,15 @@ namespace Testing;
 
 use Database;
 use Logic;
+
 include_once('../database/mysql_functions.php');
 include_once('../logic/prediction.php');
 
 class Model
 {
-    function testIndex() {
+    function testIndex($season_id) {
         // Season is hardcoded for now
-        $season_id = '1';
+//        $season_id = '1';
         $lp_weighting = 1.00;
 
         $mySQL = new Database\MySQLFunctions();
