@@ -9,7 +9,7 @@ use PDO;
  include_once('../database/mysql_functions.php');
 class PredictGames
 {
-	function determineWinner ($fixture, $draw_coefficient, $home_booster, $season_id) {
+	function determineWinner ($dbcon, $fixture, $season_id, $testingParameters) {
 		$home_team_id = $fixture['home_team_id'];
 		$away_team_id = $fixture['away_team_id'];
 		$fixture_date_string = $fixture['game_date'];
@@ -17,19 +17,18 @@ class PredictGames
         $game_points = $fixture['game_points'];
 		
 		$mySQL = new Database\MySQLFunctions();
-		$dbcon = $mySQL->connectMySQLDB();
 
         $leaguePositions = $this->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixture_date_string);
         $form = $this->checkForm($dbcon, $mySQL, $season_id, $fixture_date_string);
 
-        $powerRankings = $this->useAlgorithm($leaguePositions, $form);
+        $powerRankings = $this->useAlgorithm($leaguePositions, $form, $testingParameters['lp_weighting'], $testingParameters['form_weighting']);
 
         // Checking if the game has already been played, if it has we will check the result
         $fixture_date = new DateTime($fixture_date_string);
         $date_today = new DateTime();
         $date_today->modify('-2 days');
 
-        if (floatval(($powerRankings[$home_team_id] * $home_booster) - $powerRankings[$away_team_id]) > $draw_coefficient) {
+        if (floatval(($powerRankings[$home_team_id] * $testingParameters['home_booster']) - $powerRankings[$away_team_id]) > $testingParameters['draw_coefficient']) {
             // Home team wins, need to check whether the game has happened. Need to deal with timezones at some point
             if ($fixture_date > $date_today) {
                 return 'Home';
@@ -40,7 +39,7 @@ class PredictGames
                     'Correct' => $pred_result
                 ];
             }
-        } elseif (floatval($powerRankings[$away_team_id] - ($powerRankings[$home_team_id] * $home_booster)) > $draw_coefficient) {
+        } elseif (floatval($powerRankings[$away_team_id] - ($powerRankings[$home_team_id] * $testingParameters['home_booster'])) > $testingParameters['draw_coefficient']) {
             // Away team wins, need to check whether the game has happened. Need to deal with timezones at some point
             if ($fixture_date > $date_today) {
                 return 'Away';
@@ -112,7 +111,7 @@ class PredictGames
 
         return $pointsRatio;
     }
-    function useAlgorithm($leaguePositions, $form, $lp_weighting = 1, $form_weighting = 1) {
+    function useAlgorithm($leaguePositions, $form, $lp_weighting = 1.00, $form_weighting = 1.00) {
         // Merge the different coefficients into a final power ranking value
         $powerRankings = [];
 
