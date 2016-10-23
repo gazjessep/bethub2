@@ -11,9 +11,9 @@ include_once('index.php');
 echo('Inserting season...'."\r\n");
 $index = new Database\Index();
 
-$league_name = 'english_premier_league';
-$league_country = 'england';
-$league_url = 'england/premier-league-';
+$league_name = 'romanian_liga-1';
+$league_country = 'romania';
+$league_url = 'romania/liga-1-';
 
 foreach (range(2011, 2015, 1) as $year) {
     echo('Inserting '.$league_name.' '.(string)$year.'/'.(string)($year+1)."\r\n");

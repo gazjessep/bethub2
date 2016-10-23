@@ -560,6 +560,26 @@ class MySQLFunctions
     }
 
     // Store the results of predicted season
+    function checkTestingParameters(PDO $dbcon, $testingParameters) {
+        try {
+            $sqlQ = "SELECT *
+		        FROM testing_index
+		        WHERE season_id = '".$testingParameters['season_id']."' AND draw_coefficient = '".$testingParameters['draw_coefficient']."' 
+		        AND home_booster = '".$testingParameters['home_booster']."' AND lp_weighting = '".$testingParameters['lp_weighting']."' 
+		        AND form_weighting = '".$testingParameters['form_weighting']."'";
+            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $response = $sqlResponse->fetchAll();
+
+            return $response;
+
+        } catch (PDOException $e) {
+            exit('Error checking testing parameters : '.$e->getMessage());
+        }
+    }
+
+    // Store the results of predicted season
     function storeTestingParameters(PDO $dbcon, $testingParameters) {
         try {
             $sqlQ = "INSERT INTO `testing_index`
