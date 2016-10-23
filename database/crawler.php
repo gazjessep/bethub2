@@ -36,7 +36,8 @@ Class Crawler {
                 list($team_1, $team_2) = explode(" - ", $teams);
                 //	score
                 $score = $xpath->query("td[2]/a", $row)->item(0)->nodeValue;
-                list($goals_1, $goals_2) = explode(":", $score);
+                list($goals, $bullshit) = explode(" ", $score);
+                list($goals_1, $goals_2) = explode(":", $goals);
                 //	date
                 $date  = $xpath->query("td[6]", $row)->item(0)->nodeValue;
                 list($day, $month, $year) = explode(".", $date);
