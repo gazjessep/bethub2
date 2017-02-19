@@ -164,6 +164,70 @@ class Model
 
         $mySQL->storePredictions($dbcon, $testingID, $results);
     }
+
+    function createDataset($season_id) {
+        $mySQL = new Database\MySQLFunctions();
+        $prediction = new Logic\PredictGames();
+        $dbcon = $mySQL->connectMySQLDB();
+
+        $fixtures = $this->getSeason($season_id, $dbcon);
+
+        $leaguePosition = $prediction->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixtures[0]['game_date']);
+        $form = $prediction->checkForm($dbcon, $mySQL, $season_id, $fixtures[0]['game_date']);
+        $date = $fixtures[0]['game_date'];
+        $count = 0;
+
+        foreach ($fixtures as $fixture) {
+            $count++;
+            if ($count > 20) {
+                if ($date == $fixture['game_date']) {
+                    $dataset[] = [
+                        'home_team_id' => $fixture['home_team_id'],
+                        'home_team_lp' => $leaguePosition[$fixture['home_team_id']],
+                        'home_team_form' => $form[$fixture['home_team_id']],
+                        'away_team_id' => $fixture['away_team_id'],
+                        'away_team_lp' => $leaguePosition[$fixture['away_team_id']],
+                        'away_team_form' => $form[$fixture['away_team_id']],
+                        'home_points' => $fixture['game_points']
+                    ];
+                } else {
+                    $date = $fixture['game_date'];
+                    $leaguePosition = $prediction->checkLeaguePosition($dbcon, $mySQL, $season_id, $date);
+                    $form = $prediction->checkForm($dbcon, $mySQL, $season_id, $date);
+                    $dataset[] = [
+                        'home_team_id' => $fixture['home_team_id'],
+                        'home_team_lp' => $leaguePosition[$fixture['home_team_id']],
+                        'home_team_form' => $form[$fixture['home_team_id']],
+                        'away_team_id' => $fixture['away_team_id'],
+                        'away_team_lp' => $leaguePosition[$fixture['away_team_id']],
+                        'away_team_form' => $form[$fixture['away_team_id']],
+                        'home_points' => $fixture['game_points']
+                    ];
+                }
+            }
+        }
+
+        if (isset($dataset)) {
+            $this->storeasCSV($season_id, $dataset);
+        }
+    }
+    function storeasCSV($season_id, $dataset = []) {
+        // Use timestamp in the file handle - to ensure each test set is unique
+        $time = time();
+        $handle = fopen('./output/season_'.$season_id.'_dataset_'.$time.'.csv', 'w');
+
+        // Add the header of the CSV file
+        fputcsv($handle, array('home_team_id', 'home_team_lp', 'home_team_form', 'away_team_id', 'away_team_lp', 'away_team_form', 'home_points'),',');
+        // Add the data queried from database
+        foreach($dataset as $row) {
+            fputcsv(
+                $handle, // The file pointer
+                array($row['home_team_id'], $row['home_team_lp'], $row['home_team_form'], $row['away_team_id'], $row['away_team_lp'], $row['away_team_form'], $row['home_points']), // The fields
+                ',' // The delimiter
+            );
+        }
+        fclose($handle);
+    }
 }
 	
 ?>
