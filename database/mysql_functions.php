@@ -3,12 +3,29 @@ namespace Database;
 
 use PDO;
 use PDOException;
+use Exception;
 
-include_once('crawler.php');
-include_once('config.php');
+// Need to comment these in if you want to run from CLI
+//include_once('crawler.php');
+//include_once('config.php');
 
 class MySQLFunctions
 {
+    const PROD = 'production';
+    const LOCAL = 'local';
+
+    private $config = [];
+
+    function __construct($type)
+    {
+        // Load Config
+        if (isset(Config::$config[$type])) {
+            $this->config = Config::$config[$type];
+        } else {
+            throw new Exception('Config type not found!');
+        }
+    }
+
     //add class for MySQL
     function connectMySQLDB () {
 

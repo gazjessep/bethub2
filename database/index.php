@@ -1,14 +1,31 @@
 <?php
 
 namespace Database;
-include_once('mysql_functions.php');
-include_once('crawler.php');
+
+use Exception;
+
 Class Index
 {
+    const PROD = 'production';
+    const LOCAL = 'local';
 
-    function addSeason ($league_name = 'english_premier_league', $league_country = 'england', $league_url = 'england/premier-league-', $year = 2013)
+    private $config = [];
+    private $env;
+
+    public function __construct($type)
     {
-        $mySQL = new MySQLFunctions();
+        // Load Config
+        if (isset(Config::$config[$type])) {
+            $this->config = Config::$config[$type];
+        } else {
+            throw new Exception('Config type not found!');
+        }
+        $this->env = $type;
+    }
+
+    function addSeason ($league_name, $league_country, $league_url, $year)
+    {
+        $mySQL = new MySQLFunctions($this::LOCAL);
         try {
             $mySQLcon = $mySQL->connectMySQLDB();
         } catch (\Exception $e) {
@@ -28,7 +45,7 @@ Class Index
             $season_id = $mySQL->insertSeason($mySQLcon, $year, $league_id);
         }
 
-        $buildURL = 'http://www.betexplorer.com/soccer/' . $league_url . strval($year) . '-' . strval($year + 1) . '/results/';
+        $buildURL = $this->config['crawler']['base_url'] . $league_url . strval($year) . '-' . strval($year + 1) . $this->config['crawler']['end_url']['results'];
 
         $crawler = new Crawler();
         $games = $crawler->crawlUrl($buildURL);
