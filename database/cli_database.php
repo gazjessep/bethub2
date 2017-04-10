@@ -10,7 +10,7 @@ include_once('index.php');
 //$mysql->executeSchema($dbconnection);
 echo('Inserting season...'."\r\n");
 // Pass in the config settings we want to use
-$index = new Database\Index(\Database\Index::LOCAL);
+$index = new Database\Index(Database\Index::DB_LOCAL);
 
 $league_name = 'romanian_liga-1';
 $league_country = 'romania';

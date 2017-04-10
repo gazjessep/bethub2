@@ -9,10 +9,11 @@ include_once('../logic/prediction.php');
 
 class Model
 {
+
     function testIndex($season_id, $_testingParameters) {
         $lp_weighting = 1.00;
 
-        $mySQL = new Database\MySQLFunctions();
+        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCALF);
         $dbcon = $mySQL->connectMySQLDB();
 
         // Get the seasons results & fixtures
@@ -129,7 +130,7 @@ class Model
 	}
 	
 	function getSeason($season_id, $dbcon) {
-		$mySQL = new Database\MySQLFunctions();
+		$mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
 		
 		$fixtures = $mySQL->getSeasonFixtures($dbcon, $season_id);
 		
@@ -137,7 +138,7 @@ class Model
 	}
 
 	function getTeamsListForSeason($season_id, $dbcon) {
-		$mySQL = new Database\MySQLFunctions();
+		$mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
 		
 		$teamsList = $mySQL->getTeamsListForSeason($dbcon, $season_id);
 		
@@ -145,7 +146,7 @@ class Model
 	}
 
     function storeTestingParameters($dbcon, $season_id, $testingParameters) {
-        $mySQL = new Database\MySQLFunctions();
+        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
 
         $testingParameters['season_id'] = $season_id;
         // First, check if we have already run this test on this season
@@ -160,13 +161,13 @@ class Model
     }
 
     function storePredictions($testingID, $results, $dbcon) {
-        $mySQL = new Database\MySQLFunctions();
+        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
 
         $mySQL->storePredictions($dbcon, $testingID, $results);
     }
 
     function createDataset($season_id) {
-        $mySQL = new Database\MySQLFunctions();
+        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
         $prediction = new Logic\PredictGames();
         $dbcon = $mySQL->connectMySQLDB();
 

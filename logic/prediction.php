@@ -9,6 +9,7 @@ use PDO;
  include_once('../database/mysql_functions.php');
 class PredictGames
 {
+
 	function determineWinner ($dbcon, $fixture, $season_id, $testingParameters) {
 		$home_team_id = $fixture['home_team_id'];
 		$away_team_id = $fixture['away_team_id'];
@@ -16,7 +17,7 @@ class PredictGames
 //        $fixture_id = $fixture['fixture_id'];
         $game_points = $fixture['game_points'];
 		
-		$mySQL = new Database\MySQLFunctions('local');
+		$mySQL = new Database\MySQLFunctions(Database\Index::DB_LOCAL);
 
         $leaguePositions = $this->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixture_date_string);
         $form = $this->checkForm($dbcon, $mySQL, $season_id, $fixture_date_string);

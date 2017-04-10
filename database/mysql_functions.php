@@ -11,8 +11,8 @@ use Exception;
 
 class MySQLFunctions
 {
-    const PROD = 'production';
-    const LOCAL = 'local';
+    const DB_PROD = 'production';
+    const DB_LOCAL = 'local';
 
     private $config = [];
 

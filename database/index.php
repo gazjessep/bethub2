@@ -6,8 +6,8 @@ use Exception;
 
 Class Index
 {
-    const PROD = 'production';
-    const LOCAL = 'local';
+    const DB_PROD = 'production';
+    const DB_LOCAL = 'local';
 
     private $config = [];
     private $env;
@@ -25,7 +25,7 @@ Class Index
 
     function addSeason ($league_name, $league_country, $league_url, $year)
     {
-        $mySQL = new MySQLFunctions($this::LOCAL);
+        $mySQL = new MySQLFunctions(self::DB_LOCAL);
         try {
             $mySQLcon = $mySQL->connectMySQLDB();
         } catch (\Exception $e) {
