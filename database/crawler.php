@@ -24,7 +24,7 @@ Class Crawler {
         //
         $xpath = new DOMXPath($dom);
         //	get tr's in results table
-        $rows = $xpath->query("//tbody[@id='leagueresults_tbody']/tr[not(contains(@class, 'rtitle'))]");
+        $rows = $xpath->query("//table[@class='table-main']/tbody/tr");
 
         $games = array();
 
