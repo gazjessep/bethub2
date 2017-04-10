@@ -1,9 +1,27 @@
 <?php
 
-include_once('test.php');
+require_once '../vendor/autoload.php';
+
+if (!isset($argv[1])) {
+    exit("Need to add arguments eg. php cli_database.php 'user' 'environment (local or production)'"."\n");
+}
+
+if (isset($argv[2])) {
+    if ($argv[2] === 'production') {
+        // Set config to production
+        $config = \Database\Config::getConfig(Database\Config::DB_PROD, $argv[1]);
+    } else {
+        // Set config to local
+        $config = \Database\Config::getConfig(Database\Config::DB_LOCAL, $argv[1]);
+    }
+} else {
+    // Set config to local
+    $config = \Database\Config::getConfig(Database\Config::DB_LOCAL, $argv[1]);
+}
 
 echo('Starting test...'."\r\n");
 
+// Hard Coded
 $testingParameters = [
     'draw_coefficient' => [
         'min' => 0.01,
@@ -22,11 +40,11 @@ $testingParameters = [
     ]
 ];
 
-$class = new Testing\Model();
+$model = new Testing\Model($config);
 
 foreach (range(1,5,1) as $season_id) {
     echo('Starting testing for season '.(string)$season_id."\r\n");
-    $class->testIndex($season_id, $testingParameters);
+    $model->testIndex($season_id, $testingParameters);
     echo('Completed testing for season '.(string)$season_id."\r\n");
 }
 

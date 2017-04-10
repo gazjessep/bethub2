@@ -1,9 +1,15 @@
 <?php
+
 namespace Database;
 
-class Config {
+use Exception;
 
-    public static $config = [
+class Config
+{
+    const DB_PROD = 'production';
+    const DB_LOCAL = 'local';
+
+    private static $config = [
         'scott' => [
             'production' => [
                 'database'	=> [
@@ -37,6 +43,16 @@ class Config {
         'gaz' => [
         ]
     ];
+
+    public static function getConfig($env, $user)
+    {
+        if (isset(Config::$config[$user])) {
+            $config = Config::$config[$user][$env];
+        } else {
+            throw new Exception('User not found!');
+        }
+        return $config;
+    }
 }
 
 ?>

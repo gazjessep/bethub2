@@ -1,26 +1,29 @@
 <?php
 
-namespace Logic;
+namespace Predict;
 
 use Database;
 use DateTime;
-use PDO;
 
- include_once('../database/mysqlfunctions.php');
-class PredictGames
+class Prediction
 {
+    function __construct($config)
+    {
+        // Set config
+        $this->config = $config;
 
-	function determineWinner ($dbcon, $fixture, $season_id, $testingParameters) {
+        // Instantiate MySQL Function class
+        $this->mySQLFunctions = new Database\MySQLFunctions($config);
+    }
+
+    function determineWinner ($fixture, $season_id, $testingParameters) {
 		$home_team_id = $fixture['home_team_id'];
 		$away_team_id = $fixture['away_team_id'];
 		$fixture_date_string = $fixture['game_date'];
-//        $fixture_id = $fixture['fixture_id'];
         $game_points = $fixture['game_points'];
-		
-		$mySQL = new Database\MySQLFunctions(Database\Index::DB_LOCAL);
 
-        $leaguePositions = $this->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixture_date_string);
-        $form = $this->checkForm($dbcon, $mySQL, $season_id, $fixture_date_string);
+        $leaguePositions = $this->checkLeaguePosition($season_id, $fixture_date_string);
+        $form = $this->checkForm($season_id, $fixture_date_string);
 
         $powerRankings = $this->useAlgorithm($leaguePositions, $form, $testingParameters['lp_weighting'], $testingParameters['form_weighting']);
 
@@ -98,17 +101,17 @@ class PredictGames
         }
 	}
 
-    function checkLeaguePosition(PDO $dbcon, Database\MySQLFunctions $mySQL, $season_id, $fixture_date_string) {
+    function checkLeaguePosition($season_id, $fixture_date_string) {
         // We want to store the result of this query as at the date and season passed - as it returns all teams (as at that date)
         // This essentially brings back a ratio of points won for the entire season (ie. league position)
-        $pointsRatio = $mySQL->getPointsRatio($dbcon, $season_id, $fixture_date_string);
+        $pointsRatio = $this->mySQLFunctions->getPointsRatio($season_id, $fixture_date_string);
 
         return $pointsRatio;
     }
-    function checkForm(PDO $dbcon, Database\MySQLFunctions $mySQL, $season_id, $fixture_date_string) {
+    function checkForm($season_id, $fixture_date_string) {
         // We want to store the result of this query as at the date and season passed - as it returns all teams (as at that date)
         // This essentially brings back a ratio of points won in the last 4 games (ie. form)
-        $pointsRatio = $mySQL->getFormRatio($dbcon, $season_id, $fixture_date_string);
+        $pointsRatio = $this->mySQLFunctions->getFormRatio($season_id, $fixture_date_string);
 
         return $pointsRatio;
     }
@@ -134,8 +137,5 @@ class PredictGames
         return $powerRankings;
     }
 }
-
-
-
 
 ?>

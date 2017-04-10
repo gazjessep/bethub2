@@ -22,7 +22,6 @@ class MySQLFunctions
         $this->mySQLBethub = $this->connectMySQLDB();
     }
 
-    //add class for MySQL
     private function connectMySQLDB () {
 
         try {

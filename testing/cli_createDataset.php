@@ -1,13 +1,30 @@
 <?php
 
-include_once('test.php');
+require_once '../vendor/autoload.php';
 
-echo('Starting test...'."\r\n");
-
-$class = new Testing\Model();
-
-foreach (range(1,5,1) as $season_id) {
-    echo('Starting testing for season '.(string)$season_id."\r\n");
-    $class->createDataset($season_id);
-    echo('Completed testing for season '.(string)$season_id."\r\n");
+if (!isset($argv[1])) {
+    exit("Need to add arguments eg. php cli_database.php 'user' 'environment (local or production)' 'season_id'"."\n");
 }
+
+if (isset($argv[2])) {
+    if ($argv[2] === 'production') {
+        // Set config to production
+        $config = \Database\Config::getConfig(Database\Config::DB_PROD, $argv[1]);
+    } else {
+        // Set config to local
+        $config = \Database\Config::getConfig(Database\Config::DB_LOCAL, $argv[1]);
+    }
+} else {
+    // Set config to local
+    $config = \Database\Config::getConfig(Database\Config::DB_LOCAL, $argv[1]);
+}
+
+echo('Building test dataset...'."\r\n");
+
+$model = new Testing\Model($config);
+
+if (!isset($argv[3])) {
+    exit("Use as follows - php cli_testing 'user' 'environment' 'season_id'"."\n");
+}
+
+$model->createDataset($argv[1]);

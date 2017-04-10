@@ -10,26 +10,18 @@ Class Index
     const DB_LOCAL = 'local';
 
     private $config = [];
-    private $env;
 
-    public function __construct($env, $user)
+    public function __construct($config)
     {
-        // Load Config
-        if (isset(Config::$config[$user])) {
-            $this->config = Config::$config[$user][$env];
-        } else {
-            throw new Exception('User not found!');
-        }
-
-        // Set environment
-        $this->env = $env;
+        // Set config
+        $this->config = $config;
     }
 
     function addSeason ($league_name, $league_country, $league_url, $year)
     {
         try {
             $mySQL = new MySQLFunctions($this->config);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw $e;
         }
 

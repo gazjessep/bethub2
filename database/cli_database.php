@@ -9,16 +9,18 @@ if (!isset($argv[1])) {
 if (isset($argv[2])) {
     if ($argv[2] === 'production') {
         // Set config to production
-        $index = new Database\Index(Database\Index::DB_PROD, $argv[1]);
+        $config = \Database\Config::getConfig(Database\Config::DB_PROD, $argv[1]);
     } else {
         // Set config to local
-        $index = new Database\Index(Database\Index::DB_LOCAL, $argv[1]);
+        $config = \Database\Config::getConfig(Database\Config::DB_LOCAL, $argv[1]);
     }
 } else {
     // Set config to local
-    $index = new Database\Index(Database\Index::DB_LOCAL, $argv[1]);
+    $config = \Database\Config::getConfig(Database\Config::DB_LOCAL, $argv[1]);
 }
 
+// Instantiate index class
+$index = new Database\Index($config);
 
 $league_name = 'english_premier_league';
 $league_country = 'england';

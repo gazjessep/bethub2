@@ -5,7 +5,9 @@
     "require": {},
     "autoload": {
         "psr-4": {
-          "Database\\": "database"
+          "Database\\": "database",
+          "Testing\\": "testing",
+          "Predict\\": "logic"
         }
     }
 }

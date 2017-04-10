@@ -1,23 +1,26 @@
 <?php
+
 namespace Testing;
 
 use Database;
-use Logic;
-
-include_once('../database/mysqlfunctions.php');
-include_once('../logic/prediction.php');
+use Predict;
 
 class Model
 {
+    function __construct($config)
+    {
+        // Set config
+        $this->config = $config;
+
+        // Instantiate MySQL Function class
+        $this->mySQLFunctions = new Database\MySQLFunctions($config);
+    }
 
     function testIndex($season_id, $_testingParameters) {
         $lp_weighting = 1.00;
 
-        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCALF);
-        $dbcon = $mySQL->connectMySQLDB();
-
         // Get the seasons results & fixtures
-        $fixtures = $this->getSeason($season_id, $dbcon);
+        $fixtures = $this->getSeason($season_id);
 
         // Loop through our draw/win cutoff
         foreach (range($_testingParameters['draw_coefficient']['min'],
@@ -35,24 +38,24 @@ class Model
                         'lp_weighting' => $lp_weighting,
                         'form_weighting' => $form_weighting
                     ];
-                    $testingID = $this->storeTestingParameters($dbcon, $season_id, $testingParameters);
+                    $testingID = $this->storeTestingParameters($season_id, $testingParameters);
                     if ($testingID == 'TestAlreadyRun') {
                         continue;
                     }
-                    $results = $this->testPredictions($dbcon, $season_id, $fixtures, $testingParameters);
-                    $this->storePredictions($testingID, $results, $dbcon);
+                    $results = $this->testPredictions($season_id, $fixtures, $testingParameters);
+                    $this->storePredictions($testingID, $results);
                 }
             }
         }
     }
-	function testPredictions($dbcon, $season_id, $fixtures, $testingParameters) {
+	function testPredictions($season_id, $fixtures, $testingParameters) {
 	    echo('Testing Predictions for...'."\r\n");
         print_r($testingParameters);
 
-        $prediction = new Logic\PredictGames();
+        $prediction = new Predict\Prediction($this->config);
 
 		$teamsArray = [];
-		$teamsList = $this->getTeamsListForSeason($season_id, $dbcon);
+		$teamsList = $this->getTeamsListForSeason($season_id);
 
 		foreach ($teamsList as $team) {
 			$teamsArray[$team['home_team_id']] = 'Placeholder';
@@ -74,7 +77,7 @@ class Model
 				unset($teamsArray[$fixture['away_team_id']]);
 				continue;
 			}
-			$predictedResult = $prediction->determineWinner($dbcon, $fixture, $season_id, $testingParameters);
+			$predictedResult = $prediction->determineWinner($fixture, $season_id, $testingParameters);
             if (!empty($predictedResult['Prediction']) && !empty($predictedResult['Correct'])) {
                 if ($predictedResult['Prediction'] == 'Home') {
                     $totalCount_all++;
@@ -129,52 +132,42 @@ class Model
         return $resultsArray;
 	}
 	
-	function getSeason($season_id, $dbcon) {
-		$mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
-		
-		$fixtures = $mySQL->getSeasonFixtures($dbcon, $season_id);
+	function getSeason($season_id) {
+		$fixtures = $this->mySQLFunctions->getSeasonFixtures($season_id);
 		
 		return $fixtures;
 	}
 
-	function getTeamsListForSeason($season_id, $dbcon) {
-		$mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
-		
-		$teamsList = $mySQL->getTeamsListForSeason($dbcon, $season_id);
+	function getTeamsListForSeason($season_id) {
+		$teamsList = $this->mySQLFunctions->getTeamsListForSeason($season_id);
 		
 		return $teamsList;
 	}
 
-    function storeTestingParameters($dbcon, $season_id, $testingParameters) {
-        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
-
+    function storeTestingParameters($season_id, $testingParameters) {
         $testingParameters['season_id'] = $season_id;
         // First, check if we have already run this test on this season
-        $checkParameters = $mySQL->checkTestingParameters($dbcon, $testingParameters);
+        $checkParameters = $this->mySQLFunctions->checkTestingParameters($testingParameters);
         if (count($checkParameters) != 0) {
             echo('Already tested season '.$season_id.' with these parameters'."\r\n");
             return 'TestAlreadyRun';
         }
 
-        $testingID = $mySQL->storeTestingParameters($dbcon, $testingParameters);
+        $testingID = $this->mySQLFunctions->storeTestingParameters($testingParameters);
         return $testingID;
     }
 
-    function storePredictions($testingID, $results, $dbcon) {
-        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
-
-        $mySQL->storePredictions($dbcon, $testingID, $results);
+    function storePredictions($testingID, $results) {
+        $this->mySQLFunctions->storePredictions($testingID, $results);
     }
 
     function createDataset($season_id) {
-        $mySQL = new Database\MySQLFunctions(Database\MySQLFunctions::DB_LOCAL);
-        $prediction = new Logic\PredictGames();
-        $dbcon = $mySQL->connectMySQLDB();
+        $prediction = new Predict\Prediction($this->config);
 
-        $fixtures = $this->getSeason($season_id, $dbcon);
+        $fixtures = $this->getSeason($season_id);
 
-        $leaguePosition = $prediction->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixtures[0]['game_date']);
-        $form = $prediction->checkForm($dbcon, $mySQL, $season_id, $fixtures[0]['game_date']);
+        $leaguePosition = $prediction->checkLeaguePosition($season_id, $fixtures[0]['game_date']);
+        $form = $prediction->checkForm($season_id, $fixtures[0]['game_date']);
         $date = $fixtures[0]['game_date'];
         $count = 0;
 
@@ -193,8 +186,8 @@ class Model
                     ];
                 } else {
                     $date = $fixture['game_date'];
-                    $leaguePosition = $prediction->checkLeaguePosition($dbcon, $mySQL, $season_id, $date);
-                    $form = $prediction->checkForm($dbcon, $mySQL, $season_id, $date);
+                    $leaguePosition = $prediction->checkLeaguePosition($season_id, $date);
+                    $form = $prediction->checkForm($season_id, $date);
                     $dataset[] = [
                         'home_team_id' => $fixture['home_team_id'],
                         'home_team_lp' => $leaguePosition[$fixture['home_team_id']],
