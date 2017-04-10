@@ -25,32 +25,39 @@ Class Index
 
     function addSeason ($league_name, $league_country, $league_url, $year)
     {
-        $mySQL = new MySQLFunctions(self::DB_LOCAL);
         try {
-            $mySQLcon = $mySQL->connectMySQLDB();
+            $mySQL = new MySQLFunctions(self::DB_LOCAL);
         } catch (\Exception $e) {
-            throw new $e($e->getMessage());
+            throw $e;
         }
 
-        if ($league_id = $mySQL->leagueExists($mySQLcon, $league_name, $league_country)) {
+        if ($league_id = $mySQL->leagueExists($league_name, $league_country)) {
             echo('League already exists...Continuing...'."\r\n");
         } else {
-            $league_id = $mySQL->insertLeague($mySQLcon, $league_name, $league_country, $league_url);
+            $league_id = $mySQL->insertLeague($league_name, $league_country, $league_url);
         }
 
-        if ($season_id = $mySQL->seasonExists($mySQLcon, $league_id, $year)) {
+        if ($season_id = $mySQL->seasonExists($league_id, $year)) {
             echo('Warning: Season already exists, already scraped!'. "\r\n");
             return 'Season_exists';
         } else {
-            $season_id = $mySQL->insertSeason($mySQLcon, $year, $league_id);
+            $season_id = $mySQL->insertSeason($year, $league_id);
         }
 
         $buildURL = $this->config['crawler']['base_url'] . $league_url . strval($year) . '-' . strval($year + 1) . $this->config['crawler']['end_url']['results'];
 
+        echo($buildURL."\n");
         $crawler = new Crawler();
         $games = $crawler->crawlUrl($buildURL);
-        echo(count($games) . ' games' . PHP_EOL);
 
+        // If no games found, remove season and return
+        if (count($games) == 0) {
+            echo('No games found - crawler may not be working'."\n");
+            $mySQL->deleteSeason($season_id);
+            return 'Done!';
+        }
+
+        echo(count($games) . ' games' . PHP_EOL);
         foreach ($games as $game) {
 
             // check data for missing fields
@@ -87,35 +94,35 @@ Class Index
                 'goaldifference' => $game['goals_at'] - $game['goals_ht']
             ];
 
-            $hteam_id = $mySQL->teamExists($mySQLcon, strtolower($game['hteam']), $league_country);
-            $ateam_id = $mySQL->teamExists($mySQLcon, strtolower($game['ateam']), $league_country);
+            $hteam_id = $mySQL->teamExists(strtolower($game['hteam']), $league_country);
+            $ateam_id = $mySQL->teamExists(strtolower($game['ateam']), $league_country);
 
             // check both team exist, or one exists, insert fixture and results
             if ($hteam_id !== false && $ateam_id !== false) {
-                $fixture_id = $mySQL->insertFixture($mySQLcon, $game['game_date'], $season_id, $hteam_id, $ateam_id);
-                $mySQL->insertHomeGame($mySQLcon, $home_game_data, $season_id, $hteam_id, $fixture_id);
-                $mySQL->insertAwayGame($mySQLcon, $away_game_data, $season_id, $ateam_id, $fixture_id);
+                $fixture_id = $mySQL->insertFixture($game['game_date'], $season_id, $hteam_id, $ateam_id);
+                $mySQL->insertHomeGame($home_game_data, $season_id, $hteam_id, $fixture_id);
+                $mySQL->insertAwayGame($away_game_data, $season_id, $ateam_id, $fixture_id);
 
             } elseif ($hteam_id !== false || $ateam_id !== false) {
                 if ($hteam_id === false) {
-                    $hteam_id = $mySQL->insertTeam($mySQLcon, strtolower($game['hteam']), $league_country, $league_id);
-                    $fixture_id = $mySQL->insertFixture($mySQLcon, $game['game_date'], $season_id, $hteam_id, $ateam_id);
-                    $mySQL->insertHomeGame($mySQLcon, $home_game_data, $season_id, $hteam_id, $fixture_id);
-                    $mySQL->insertAwayGame($mySQLcon, $away_game_data, $season_id, $ateam_id, $fixture_id);
+                    $hteam_id = $mySQL->insertTeam(strtolower($game['hteam']), $league_country, $league_id);
+                    $fixture_id = $mySQL->insertFixture($game['game_date'], $season_id, $hteam_id, $ateam_id);
+                    $mySQL->insertHomeGame($home_game_data, $season_id, $hteam_id, $fixture_id);
+                    $mySQL->insertAwayGame($away_game_data, $season_id, $ateam_id, $fixture_id);
 
                 } else {
-                    $ateam_id = $mySQL->insertTeam($mySQLcon, strtolower($game['ateam']), $league_country, $league_id);
-                    $fixture_id = $mySQL->insertFixture($mySQLcon, $game['game_date'], $season_id, $hteam_id, $ateam_id);
-                    $mySQL->insertHomeGame($mySQLcon, $home_game_data, $season_id, $hteam_id, $fixture_id);
-                    $mySQL->insertAwayGame($mySQLcon, $away_game_data, $season_id, $ateam_id, $fixture_id);
+                    $ateam_id = $mySQL->insertTeam(strtolower($game['ateam']), $league_country, $league_id);
+                    $fixture_id = $mySQL->insertFixture($game['game_date'], $season_id, $hteam_id, $ateam_id);
+                    $mySQL->insertHomeGame($home_game_data, $season_id, $hteam_id, $fixture_id);
+                    $mySQL->insertAwayGame($away_game_data, $season_id, $ateam_id, $fixture_id);
 
                 }
             } else {
-                $hteam_id = $mySQL->insertTeam($mySQLcon, strtolower($game['hteam']), $league_country, $league_id);
-                $ateam_id = $mySQL->insertTeam($mySQLcon, strtolower($game['ateam']), $league_country, $league_id);
-                $fixture_id = $mySQL->insertFixture($mySQLcon, $game['game_date'], $season_id, $hteam_id, $ateam_id);
-                $mySQL->insertHomeGame($mySQLcon, $home_game_data, $season_id, $hteam_id, $fixture_id);
-                $mySQL->insertAwayGame($mySQLcon, $away_game_data, $season_id, $ateam_id, $fixture_id);
+                $hteam_id = $mySQL->insertTeam(strtolower($game['hteam']), $league_country, $league_id);
+                $ateam_id = $mySQL->insertTeam(strtolower($game['ateam']), $league_country, $league_id);
+                $fixture_id = $mySQL->insertFixture($game['game_date'], $season_id, $hteam_id, $ateam_id);
+                $mySQL->insertHomeGame($home_game_data, $season_id, $hteam_id, $fixture_id);
+                $mySQL->insertAwayGame($away_game_data, $season_id, $ateam_id, $fixture_id);
 
             }
         }

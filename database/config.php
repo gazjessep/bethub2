@@ -13,7 +13,7 @@ class Config {
                 'username'	=> 'scott',
                 'password'	=> 'SC0TTbethub'
             ],
-            'scrape' => [
+            'crawler' => [
                 'base_url' => 'http://www.betexplorer.com/soccer/'
             ]
         ],
@@ -26,8 +26,8 @@ class Config {
                 'username'	=> 'scott',
                 'password'	=> 'scottBETHUB'
             ],
-            'scrape' => [
-                'base_url' => 'http://www.betexplorer.com/results/soccer/',
+            'crawler' => [
+                'base_url' => 'http://www.betexplorer.com/soccer/',
                 'end_url' => [
                     'results' => '/results/',
                     'fixtures' => '/fixtures/'

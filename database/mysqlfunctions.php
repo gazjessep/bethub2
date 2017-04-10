@@ -15,6 +15,7 @@ class MySQLFunctions
     const DB_LOCAL = 'local';
 
     private $config = [];
+    private $mySQLBethub;
 
     function __construct($type)
     {
@@ -24,10 +25,13 @@ class MySQLFunctions
         } else {
             throw new Exception('Config type not found!');
         }
+
+        // Connect to mySQL
+        $this->mySQLBethub = $this->connectMySQLDB();
     }
 
     //add class for MySQL
-    function connectMySQLDB () {
+    private function connectMySQLDB () {
 
         try {
             $user = $this->config;
@@ -39,11 +43,11 @@ class MySQLFunctions
 
             return $mySQLcon;
         } catch (PDOException $e) {
-            exit('Connection failed: ' . $e->getMessage());
+            throw new Exception('Connection failed: ' . $e->getMessage());
         }
     }
 
-    function executeSchema (PDO $dbcon) {
+    function executeSchema () {
 
         try {
             // create league_index table
@@ -56,7 +60,7 @@ class MySQLFunctions
 		)
 		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -76,7 +80,7 @@ class MySQLFunctions
 		)
 		COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -97,7 +101,7 @@ class MySQLFunctions
 		)
 		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -123,7 +127,7 @@ class MySQLFunctions
 		)
 		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -153,7 +157,7 @@ class MySQLFunctions
 		)
 		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -183,7 +187,7 @@ class MySQLFunctions
 		)
 		 COLLATE "latin1_swedish_ci" ENGINE=InnoDB ROW_FORMAT=Compact AUTO_INCREMENT=1';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -211,7 +215,7 @@ class MySQLFunctions
             AUTO_INCREMENT=1
             ;';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -247,7 +251,7 @@ class MySQLFunctions
             ;
             ';
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -258,7 +262,7 @@ class MySQLFunctions
         echo ("\r\n");
     }
 
-    function insertLeague(PDO $dbcon, $league_name, $league_country, $league_url) {
+    function insertLeague($league_name, $league_country, $league_url) {
 
         // insert team into team_index table
         try {
@@ -266,10 +270,10 @@ class MySQLFunctions
 		(league_name, league_country, league_url) VALUES
 		('".$league_name."','".$league_country."','".$league_url."')";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
-            $sqlID = $dbcon->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID = $this->mySQLBethub->prepare("SELECT LAST_INSERT_ID()");
             $sqlID->execute();
             $league_id = $sqlID->fetch()['LAST_INSERT_ID()'];
 
@@ -279,12 +283,12 @@ class MySQLFunctions
         }
     }
 
-    function leagueExists(PDO $dbcon, $league_name, $country) {
+    function leagueExists($league_name, $country) {
         // check if season exists, if true returns the season_id
         try {
             $sqlQ = "SELECT league_id FROM league_index WHERE league_name='".$league_name."' AND league_country='".$country."'";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $results = $sqlResponse->fetchAll();
@@ -299,12 +303,12 @@ class MySQLFunctions
         }
     }
 
-    function seasonExists(PDO $dbcon, $league_id, $year) {
+    function seasonExists($league_id, $year) {
         // check if season exists, if true returns the season_id
         try {
             $sqlQ = "SELECT season_id FROM season_index WHERE league_id='".$league_id."' AND season_year='".$year."'";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $results = $sqlResponse->fetchAll();
@@ -319,12 +323,12 @@ class MySQLFunctions
         }
     }
 
-    function teamExists(PDO $dbcon, $teamname, $country) {
+    function teamExists($teamname, $country) {
         // check if team exists, if true returns the team_id
         try {
             $sqlQ = "SELECT team_id FROM team_index WHERE team_name='".$teamname."' AND team_country='".$country."'";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $results = $sqlResponse->fetchAll();
@@ -339,7 +343,7 @@ class MySQLFunctions
         }
     }
 
-    function insertTeam(PDO $dbcon, $teamname, $country, $league_id) {
+    function insertTeam($teamname, $country, $league_id) {
 
         // insert team into team_index table
         try {
@@ -347,10 +351,10 @@ class MySQLFunctions
 		(team_name, team_country, league_id) VALUES
 		('".$teamname."','".$country."','".$league_id."')";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
-            $sqlID = $dbcon->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID = $this->mySQLBethub->prepare("SELECT LAST_INSERT_ID()");
             $sqlID->execute();
             $teamID = $sqlID->fetch()['LAST_INSERT_ID()'];
 
@@ -361,7 +365,7 @@ class MySQLFunctions
 
     }
 
-    function insertSeason(PDO $dbcon, $seasonyear, $league_id) {
+    function insertSeason($seasonyear, $league_id) {
 
         // insert team into team_index table
         try {
@@ -369,10 +373,10 @@ class MySQLFunctions
 		(season_year, league_id) VALUES
 		('".$seasonyear."','".$league_id."')";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
-            $sqlID = $dbcon->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID = $this->mySQLBethub->prepare("SELECT LAST_INSERT_ID()");
             $sqlID->execute();
             $seasonID = $sqlID->fetch()['LAST_INSERT_ID()'];
 
@@ -382,7 +386,26 @@ class MySQLFunctions
         }
     }
 
-    function insertFixture(PDO $dbcon, $game_date, $season_id, $hteam_id, $ateam_id) {
+    function deleteSeason($season_id) {
+
+        // insert team into team_index table
+        try {
+            $sqlQ = "DELETE FROM season_index WHERE season_id='".$season_id."'";
+
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
+            $sqlResponse->execute();
+
+            $sqlID = $this->mySQLBethub->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID->execute();
+            $seasonID = $sqlID->fetch()['LAST_INSERT_ID()'];
+
+            return $seasonID;
+        } catch (PDOException $e) {
+            exit('Error inserting season : '.$e->getMessage());
+        }
+    }
+
+    function insertFixture($game_date, $season_id, $hteam_id, $ateam_id) {
 
         // insert team into team_index table
 
@@ -391,10 +414,10 @@ class MySQLFunctions
 		(home_team_id, away_team_id, game_date, season_id) VALUES
 		('".$hteam_id."','".$ateam_id."','".$game_date."','".$season_id."')";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
-            $sqlID = $dbcon->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID = $this->mySQLBethub->prepare("SELECT LAST_INSERT_ID()");
             $sqlID->execute();
             $fixtureID = $sqlID->fetch()['LAST_INSERT_ID()'];
 
@@ -404,7 +427,7 @@ class MySQLFunctions
         }
     }
 
-    function insertHomeGame(PDO $dbcon, $game_data, $season_id, $team_id, $fixture_id) {
+    function insertHomeGame($game_data, $season_id, $team_id, $fixture_id) {
 
         // insert team into team_index table
 
@@ -413,7 +436,7 @@ class MySQLFunctions
 		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id, fixture_id) VALUES
 		('".$game_data['game_date']."','".$game_data['homepoints']."','".$game_data['goalsfor']."','".$game_data['goalsagainst']."','".$game_data['goaldifference']."','".$season_id."','".$team_id."','".$fixture_id."')";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -421,7 +444,7 @@ class MySQLFunctions
         }
     }
 
-    function insertAwayGame(PDO $dbcon, $game_data, $season_id, $team_id, $fixture_id) {
+    function insertAwayGame($game_data, $season_id, $team_id, $fixture_id) {
 
         // insert team into team_index table
 
@@ -430,7 +453,7 @@ class MySQLFunctions
 		(game_date, game_points, game_gf, game_ga, game_gd, season_id, team_id, fixture_id) VALUES
 		('".$game_data['game_date']."','".$game_data['homepoints']."','".$game_data['goalsfor']."','".$game_data['goalsagainst']."','".$game_data['goaldifference']."','".$season_id."','".$team_id."','".$fixture_id."')";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
@@ -438,7 +461,7 @@ class MySQLFunctions
         }
     }
 
-    function getTotalPoints(PDO $dbcon, $season_id, $team_id, $date) {
+    function getTotalPoints($season_id, $team_id, $date) {
         // get season results/fixtures
 
         try {
@@ -453,7 +476,7 @@ class MySQLFunctions
 				WHERE ar.team_id='".$team_id."' AND ar.game_date < '".$date."' AND ar.season_id='".$season_id."') tp
 			GROUP BY tp.team_id";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $total_points = $sqlResponse->fetch()['total_points'];
@@ -464,7 +487,7 @@ class MySQLFunctions
         }
     }
     // get all fixtures within a season
-    function getSeasonFixtures(PDO $dbcon, $season_id ) {
+    function getSeasonFixtures($season_id ) {
 
         try {
             $sqlQ = "SELECT fi.fixture_id, fi.home_team_id, fi.away_team_id, fi.game_date, hr.game_points
@@ -474,7 +497,7 @@ class MySQLFunctions
             WHERE fi.season_id='".$season_id."
             'ORDER BY fi.game_date ASC";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $fixtures = $sqlResponse->fetchAll();
@@ -485,13 +508,13 @@ class MySQLFunctions
         }
     }
 
-	function getTeamsListForSeason(PDO $dbcon, $season_id) {
+	function getTeamsListForSeason($season_id) {
 		try {
 			$sqlQ = 'SELECT DISTINCT home_team_id
 				FROM fixture_index
 			WHERE season_id=' . $season_id;
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $teamsList = $sqlResponse->fetchAll();
@@ -503,7 +526,7 @@ class MySQLFunctions
         }
 	}
 
-    function getPointsRatio(PDO $dbcon, $season_id, $fixture_date) {
+    function getPointsRatio($season_id, $fixture_date) {
         try {
             $sqlQ = "SELECT tp.team_id, sum(tp.game_points)/(count(tp.game_points)*3) as ratio
 			    FROM 
@@ -516,7 +539,7 @@ class MySQLFunctions
 				WHERE ar.game_date < '".$fixture_date."' AND ar.season_id='".$season_id."') tp
 			    GROUP BY tp.team_id";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $pointsRatio = $sqlResponse->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -528,7 +551,7 @@ class MySQLFunctions
         }
     }
 
-    function getFormRatio(PDO $dbcon, $season_id, $fixture_date) {
+    function getFormRatio($season_id, $fixture_date) {
         // Get the fixture date and filter results in the past 28 days
         $fixture_date_time = new \DateTime($fixture_date);
         $filter_date_time = $fixture_date_time->modify('-40 days');
@@ -545,7 +568,7 @@ class MySQLFunctions
 				WHERE ar.game_date > '".$filter_date."' AND ar.game_date < '".$fixture_date."' AND ar.season_id='".$season_id."') tp
 			    GROUP BY tp.team_id";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $pointsRatio = $sqlResponse->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -558,13 +581,13 @@ class MySQLFunctions
     }
 
     // Gets the result from the home teams perspective
-    function getResult(PDO $dbcon, $fixture_id) {
+    function getResult($fixture_id) {
         try {
             $sqlQ = "SELECT *
                 FROM home_result_index hr
                 WHERE hr.fixture_id='".$fixture_id."'";
 
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $result = $sqlResponse->fetch();
@@ -577,14 +600,14 @@ class MySQLFunctions
     }
 
     // Store the results of predicted season
-    function checkTestingParameters(PDO $dbcon, $testingParameters) {
+    function checkTestingParameters($testingParameters) {
         try {
             $sqlQ = "SELECT *
 		        FROM testing_index
 		        WHERE season_id = '".$testingParameters['season_id']."' AND draw_coefficient = '".$testingParameters['draw_coefficient']."' 
 		        AND home_booster = '".$testingParameters['home_booster']."' AND lp_weighting = '".$testingParameters['lp_weighting']."' 
 		        AND form_weighting = '".$testingParameters['form_weighting']."'";
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
             $response = $sqlResponse->fetchAll();
@@ -597,16 +620,16 @@ class MySQLFunctions
     }
 
     // Store the results of predicted season
-    function storeTestingParameters(PDO $dbcon, $testingParameters) {
+    function storeTestingParameters($testingParameters) {
         try {
             $sqlQ = "INSERT INTO `testing_index`
 		        (season_id, draw_coefficient, home_booster, lp_weighting, form_weighting) VALUES
 		        ('".$testingParameters['season_id']."','".$testingParameters['draw_coefficient']."','".$testingParameters['home_booster']."','".$testingParameters['lp_weighting'].
                 "','".$testingParameters['form_weighting']."')";
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
-            $sqlID = $dbcon->prepare("SELECT LAST_INSERT_ID()");
+            $sqlID = $this->mySQLBethub->prepare("SELECT LAST_INSERT_ID()");
             $sqlID->execute();
             $testingID = $sqlID->fetch()['LAST_INSERT_ID()'];
 
@@ -618,14 +641,14 @@ class MySQLFunctions
     }
 
     // Store the results of predicted season
-    function storePredictions(PDO $dbcon, $testing_id, $results) {
+    function storePredictions($testing_id, $results) {
         try {
             $sqlQ = "INSERT INTO `testing_result_index`
 		        (testing_id, home_total, home_correct, home_ratio, away_total, away_correct, away_ratio, draw_total, draw_correct, draw_ratio, total_all, total_correct, total_ratio) VALUES
 		        ('".$testing_id."','".$results['Home']['Games']."','".$results['Home']['Correct']."','".$results['Home']['Ratio Correct'].
                 "','".$results['Away']['Games']."','".$results['Away']['Correct']."','".$results['Away']['Ratio Correct']."','".$results['Draw']['Games']."','".
                 $results['Draw']['Correct']."','".$results['Draw']['Ratio Correct']."','".$results['Total']['Games']. "','".$results['Total']['Correct']."','".$results['Total']['Ratio Correct']."')";
-            $sqlResponse = $dbcon->prepare($sqlQ);
+            $sqlResponse = $this->mySQLBethub->prepare($sqlQ);
             $sqlResponse->execute();
 
         } catch (PDOException $e) {
