@@ -12,21 +12,23 @@ Class Index
     private $config = [];
     private $env;
 
-    public function __construct($type)
+    public function __construct($env, $user)
     {
         // Load Config
-        if (isset(Config::$config[$type])) {
-            $this->config = Config::$config[$type];
+        if (isset(Config::$config[$user])) {
+            $this->config = Config::$config[$user][$env];
         } else {
-            throw new Exception('Config type not found!');
+            throw new Exception('User not found!');
         }
-        $this->env = $type;
+
+        // Set environment
+        $this->env = $env;
     }
 
     function addSeason ($league_name, $league_country, $league_url, $year)
     {
         try {
-            $mySQL = new MySQLFunctions(self::DB_LOCAL);
+            $mySQL = new MySQLFunctions($this->config);
         } catch (\Exception $e) {
             throw $e;
         }

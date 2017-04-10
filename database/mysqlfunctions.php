@@ -17,14 +17,10 @@ class MySQLFunctions
     private $config = [];
     private $mySQLBethub;
 
-    function __construct($type)
+    function __construct($config)
     {
-        // Load Config
-        if (isset(Config::$config[$type])) {
-            $this->config = Config::$config[$type];
-        } else {
-            throw new Exception('Config type not found!');
-        }
+        // Set Config
+        $this->config = $config;
 
         // Connect to mySQL
         $this->mySQLBethub = $this->connectMySQLDB();

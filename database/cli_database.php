@@ -1,14 +1,24 @@
 <?php
 
 require_once '../vendor/autoload.php';
-//echo('Building database...'."\r\n");
-//$mysql = new \Database\MySQLFunctions();
-//$dbconnection = $mysql->connectMySQLDB();
-//
-//$mysql->executeSchema($dbconnection);
-echo('Inserting season...'."\r\n");
-// Pass in the config settings we want to use
-$index = new Database\Index(Database\Index::DB_LOCAL);
+
+if (!isset($argv[1])) {
+    exit("Need to add arguments eg. php cli_database.php 'user' 'environment (local or production)'"."\n");
+}
+
+if (isset($argv[2])) {
+    if ($argv[2] === 'production') {
+        // Set config to production
+        $index = new Database\Index(Database\Index::DB_PROD, $argv[1]);
+    } else {
+        // Set config to local
+        $index = new Database\Index(Database\Index::DB_LOCAL, $argv[1]);
+    }
+} else {
+    // Set config to local
+    $index = new Database\Index(Database\Index::DB_LOCAL, $argv[1]);
+}
+
 
 $league_name = 'english_premier_league';
 $league_country = 'england';
