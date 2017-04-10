@@ -5,10 +5,6 @@ use PDO;
 use PDOException;
 use Exception;
 
-// Need to comment these in if you want to run from CLI
-//include_once('crawler.php');
-//include_once('config.php');
-
 class MySQLFunctions
 {
     const DB_PROD = 'production';
