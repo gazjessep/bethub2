@@ -12,6 +12,7 @@ Class Crawler {
         $curl_handle = curl_init($url);
         //	set opts
         curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl_handle,CURLOPT_USERAGENT,'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36');
         //	Get page content
         $curl_scraped_page = curl_exec($curl_handle);
         curl_close($curl_handle);
@@ -24,7 +25,9 @@ Class Crawler {
         //
         $xpath = new DOMXPath($dom);
         //	get tr's in results table
-        $rows = $xpath->query("table[contains(concat(' ', normalize-space(@class), ' '), ' table-main ')]/tbody/tr/td/..");
+        $rows = $xpath->query("//table[@class='table-main js-tablebanner-t js-tablebanner-ntb']/tbody/tr/td/..");
+
+        var_dump($rows);
 
         $games = array();
 
