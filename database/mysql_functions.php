@@ -30,7 +30,7 @@ class MySQLFunctions
     function connectMySQLDB () {
 
         try {
-            $user = Config::$mySQL_config_local;
+            $user = $this->config;
             $db = $user['database'];
             $dbhost  = 'mysql:host='. $db['ip'] . ';port=' . $db['port'] . ';dbname=' . $db['dbname'];
 

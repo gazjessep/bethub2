@@ -16,7 +16,7 @@ class PredictGames
 //        $fixture_id = $fixture['fixture_id'];
         $game_points = $fixture['game_points'];
 		
-		$mySQL = new Database\MySQLFunctions();
+		$mySQL = new Database\MySQLFunctions('local');
 
         $leaguePositions = $this->checkLeaguePosition($dbcon, $mySQL, $season_id, $fixture_date_string);
         $form = $this->checkForm($dbcon, $mySQL, $season_id, $fixture_date_string);
