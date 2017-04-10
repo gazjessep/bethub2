@@ -4,7 +4,7 @@ namespace Testing;
 use Database;
 use Logic;
 
-include_once('../database/mysql_functions.php');
+include_once('../database/mysqlfunctions.php');
 include_once('../logic/prediction.php');
 
 class Model

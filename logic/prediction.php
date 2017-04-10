@@ -6,7 +6,7 @@ use Database;
 use DateTime;
 use PDO;
 
- include_once('../database/mysql_functions.php');
+ include_once('../database/mysqlfunctions.php');
 class PredictGames
 {
 

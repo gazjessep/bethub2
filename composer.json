@@ -1,0 +1,11 @@
+{
+    "name": "gs/bethub",
+    "description": "Predictive football betting engine",
+    "type": "project",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+          "Database\\": "database"
+        }
+    }
+}

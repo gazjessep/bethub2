@@ -1,8 +1,6 @@
 <?php
 
-include_once('mysql_functions.php');
-include_once('index.php');
-
+require_once '../vendor/autoload.php';
 //echo('Building database...'."\r\n");
 //$mysql = new \Database\MySQLFunctions();
 //$dbconnection = $mysql->connectMySQLDB();
@@ -12,11 +10,11 @@ echo('Inserting season...'."\r\n");
 // Pass in the config settings we want to use
 $index = new Database\Index(Database\Index::DB_LOCAL);
 
-$league_name = 'romanian_liga-1';
-$league_country = 'romania';
-$league_url = 'romania/liga-1-';
+$league_name = 'english_premier_league';
+$league_country = 'england';
+$league_url = 'england/premier-league-';
 
-foreach (range(2011, 2015, 1) as $year) {
+foreach (range(2015, 2017, 1) as $year) {
     echo('Inserting '.$league_name.' '.(string)$year.'/'.(string)($year+1)."\r\n");
     $addSeason = $index->addSeason($league_name, $league_country,$league_url, $year);
     if ($addSeason == 'Season_exists') {
