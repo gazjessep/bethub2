@@ -35,5 +35,6 @@ foreach (range(2014, 2016, 1) as $year) {
     } else {
         echo($addSeason."\r\n");
     }
+    break;
 }
 
