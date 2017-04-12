@@ -41,8 +41,8 @@ Class Index
         $buildURL = $this->config['crawler']['base_url'] . $league_url . strval($year) . '-' . strval($year + 1) . $this->config['crawler']['end_url']['results'];
 
         echo($buildURL."\n");
-        $crawler = new Crawler();
-        $games = $crawler->crawlUrl($buildURL);
+        $crawler = new Scraper();
+        $games = $crawler->getResults($buildURL);
 
         // If no games found, remove season and return
         if (count($games) == 0) {
