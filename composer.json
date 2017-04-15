@@ -2,7 +2,9 @@
     "name": "gs/bethub",
     "description": "Predictive football betting engine",
     "type": "project",
-    "require": {},
+    "require": {
+        "fabpot/goutte": "^3.2"
+    },
     "autoload": {
         "psr-4": {
           "Database\\": "database",
